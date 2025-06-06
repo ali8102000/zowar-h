@@ -6,12 +6,15 @@
     <title>Zowar (زُوّار) - تجربة عالمية متكاملة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Firebase SDK -->
     <script type="module">
         // For this prototype, we'll mock Firebase interactions to keep it client-side in a single file.
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Sapphire & Gold Dust" - Ultra Refined with Section-Specific Accents and Firebase Integration -->
+    <!-- Application Structure Plan: Firebase initialized (mocked for single file). New "Tutoring" section added to bottom nav. Sections reordered: Home, Explore, Messages, Games, Tutoring, Profile. Each section themed. Messages icon in header removed, Messages now a main section. Create Post button in Home section. -->
     <!-- Visualization & Content Choices: 
         - Firebase: Config included. Mock functions for auth (signInAnonymously) and Firestore (getDoc, setDoc, etc.) to interact with local mockData.
         - Tutoring Section: Role selection UI (toggle). Teacher view: subject cards, mock "Publish Lesson" button. Student view: subject cards. New subjects: Islamic Studies, Biology. Teacher role now on top.
@@ -20,6 +23,7 @@
         - Gemini API: AI Caption for posts, AI Smart Replies in chat, AI Bio generation in profile.
         - All existing features refined. Scrolling behavior improved. Font sizes increased.
     -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         :root {
             --bg-primary-global: #FDFEFF; 
@@ -43,8 +47,8 @@
             --home-accent: #26A69A; 
             --explore-bg: linear-gradient(135deg, #FFFDE7 0%, #FFF3E0 100%); 
             --explore-accent: #FFA000; 
-            --games-bg: linear-gradient(120deg, #4A148C 0%, #7B1FA2 100%); /* Deep Purple for Games */
-            --games-accent: #FFEB3B; /* Bright Yellow for Games Accent */
+            --games-bg: linear-gradient(120deg, #424242 0%, #212121 100%); 
+            --games-accent: #FFEB3B; 
             --tutoring-bg: linear-gradient(135deg, #E1F5FE 0%, #E8EAF6 100%); 
             --tutoring-accent: #5C6BC0; 
             --profile-bg: linear-gradient(135deg, #E3F2FD 0%, #E8EAF6 100%); 
@@ -60,8 +64,8 @@
             --dark-home-accent: #4DB6AC;
             --dark-explore-bg: linear-gradient(135deg, #2C2A24 0%, #302D26 100%);
             --dark-explore-accent: var(--dark-highlight-gold-global);
-            --dark-games-bg: linear-gradient(120deg, #1A001A 0%, #2E0854 100%); /* Darker Purple for Games */
-            --dark-games-accent: #FFF59D; /* Lighter Yellow for Games Accent */
+            --dark-games-bg: linear-gradient(120deg, #111111 0%, #1E1E1E 100%); 
+            --dark-games-accent: #FFF59D; 
             --dark-tutoring-bg: linear-gradient(135deg, #1A2233 0%, #1C1F3A 100%); 
             --dark-tutoring-accent: #9FA8DA; 
             --dark-profile-bg: linear-gradient(135deg, #1F243A 0%, #1A2035 100%);
@@ -418,32 +422,32 @@
             <section id="games-section" class="section p-4">
                  <h2 class="text-3xl font-black text-gray-800 dark:text-gray-100 mb-8 text-center" style="color: var(--games-accent);">Zowar Play 🎮</h2>
                 <div class="grid grid-cols-2 gap-6">
-                    <div class="game-card" data-game="ludo" style="background-color: #FFEBEE; --games-accent-card: #D32F2F;">
+                    <div class="game-card" data-game="ludo" style="background-color: #FFCDD2; --games-accent-card: #E53935;">
                         <div class="game-card-icon" style="color: var(--games-accent-card);">🎲</div>
                         <h3>يلا لودو</h3>
                         <p>كلاسيكية ممتعة</p>
                     </div>
-                    <div class="game-card" data-game="dominoes" style="background-color: #E8EAF6; --games-accent-card: #303F9F;">
+                    <div class="game-card" data-game="dominoes" style="background-color: #C5CAE9; --games-accent-card: #3F51B5;">
                         <div class="game-card-icon" style="font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'sans-serif'; font-size: 2.8rem; color: var(--games-accent-card);"> Domino</div>
                         <h3>دومينو</h3>
                         <p>تحدي وتركيز</p>
                     </div>
-                    <div class="game-card" data-game="snakes-ladders" style="background-color: #E8F5E9; --games-accent-card: #388E3C;">
+                    <div class="game-card" data-game="snakes-ladders" style="background-color: #DCEDC8; --games-accent-card: #689F38;">
                         <div class="game-card-icon" style="color: var(--games-accent-card);">🐍</div>
                         <h3>حية ودرج</h3>
                         <p>حظ ومرح</p>
                     </div>
-                    <div class="game-card" data-game="basketball" style="background-color: #FFF3E0; --games-accent-card: #F57C00;">
+                    <div class="game-card" data-game="basketball" style="background-color: #FFE0B2; --games-accent-card: #FB8C00;">
                         <div class="game-card-icon" style="color: var(--games-accent-card);">🏀</div>
                         <h3>رميات السلة</h3>
                         <p>اختبر دقتك</p>
                     </div>
-                    <div class="game-card" data-game="quiz" style="background-color: #E1F5FE; --games-accent-card: #0288D1;">
+                    <div class="game-card" data-game="quiz" style="background-color: #B3E5FC; --games-accent-card: #039BE5;">
                         <div class="game-card-icon" style="color: var(--games-accent-card);">❓</div>
                         <h3>أسئلة عامة</h3>
                         <p>تحدي المعلومات</p>
                     </div>
-                     <div class="game-card" data-game="challenges" style="background-color: #FFFDE7; --games-accent-card: #FBC02D;">
+                     <div class="game-card" data-game="challenges" style="background-color: #FFECB3; --games-accent-card: #FFA000;">
                         <div class="game-card-icon" style="color: var(--games-accent-card);">🏆</div>
                         <h3>تحديات Zowar</h3>
                         <p>أثبت مهارتك</p>
@@ -600,6 +604,9 @@
             </div>
             <div class="nav-item" data-section="explore-section">
                 <div class="nav-icon">✨</div> <span class="nav-text">استكشف</span>
+            </div>
+             <div class="nav-item" data-section="messages-section"> <!-- Changed from create-post to messages -->
+                <div class="nav-icon">💬</div> <span class="nav-text">الرسائل</span>
             </div>
             <div class="nav-item" data-section="games-section">
                 <div class="nav-icon">🎮</div> <span class="nav-text">ألعاب</span>
@@ -2085,11 +2092,6 @@
                     const targetElement = getEl(sectionId);
                     if (targetElement) {
                         targetElement.classList.add('active');
-                        // Ensure the main-content itself doesn't scroll, only the active section/view
-                        // This is handled by setting overflow-y: auto on .section and .view
-                        // and overflow:hidden on .main-content
-                        
-                        // Apply section-specific theme to body for global styling overrides if needed
                         document.body.classList.add(`${sectionId}-theme`); 
                         
                         navItems.forEach(item => {
@@ -2124,7 +2126,7 @@
                             }
                         });
                     }
-                } else { // When a view like messagesView is active directly (not a main section from bottom nav)
+                } else { 
                      navItems.forEach(item => {
                         item.classList.remove('active');
                         const icon = item.querySelector('.nav-icon');

@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Zowar (زُوّار) - تجربة عالمية متكاملة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script type="module">
+        // For this prototype, we'll mock Firebase interactions to keep it client-side in a single file.
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <!-- Visualization & Content Choices: 
+        - Firebase: Config included. Mock functions for auth (signInAnonymously) and Firestore (getDoc, setDoc, etc.) to interact with local mockData.
+        - Tutoring Section: Role selection UI (toggle). Teacher view: subject cards, mock "Publish Lesson" button. Student view: subject cards. New subjects: Islamic Studies, Biology. Teacher role now on top.
+        - Section Theming: Distinct background/accent for each section. Home icon is now 🏠. Profile icon is 👤. Messages icon is 💬.
+        - Games Section: Cards now have unique background colors.
+        - Gemini API: AI Caption for posts, AI Smart Replies in chat, AI Bio generation in profile.
+        - All existing features refined. Scrolling behavior improved. Font sizes increased.
+    -->
+    <style>
+        :root {
+            --bg-primary-global: #FDFEFF; 
+            --text-primary-global: #1A202C; 
+            --accent-primary-global: #071A50; 
+            --accent-secondary-global: #1DBFAF; 
+            --highlight-gold-global: #F0B90B; 
+            --border-color-global: #EAEEF3; 
+            --danger-color-global: #E53E3E;
+
+            --dark-bg-primary-global: #0D1117; 
+            --dark-text-primary-global: #E6EDF3;
+            --dark-accent-primary-global: #79C0FF; 
+            --dark-accent-secondary-global: #58A6FF; 
+            --dark-highlight-gold-global: #F2CC8F; 
+            --dark-border-color-global: #30363D;
+            --dark-danger-color-global: #F85149;
+
+            /* Section Specific Themes (Light Mode) */
+            --home-bg: linear-gradient(135deg, #E0F7FA 0%, #E8F5E9 100%); 
+            --home-accent: #26A69A; 
+            --explore-bg: linear-gradient(135deg, #FFFDE7 0%, #FFF3E0 100%); 
+            --explore-accent: #FFA000; 
+            --games-bg: linear-gradient(120deg, #4A148C 0%, #7B1FA2 100%); /* Deep Purple for Games */
+            --games-accent: #FFEB3B; /* Bright Yellow for Games Accent */
+            --tutoring-bg: linear-gradient(135deg, #E1F5FE 0%, #E8EAF6 100%); 
+            --tutoring-accent: #5C6BC0; 
+            --profile-bg: linear-gradient(135deg, #E3F2FD 0%, #E8EAF6 100%); 
+            --profile-accent: var(--accent-primary-global);
+            --messages-bg: linear-gradient(135deg, #E0F2F1 0%, #E0F7FA 100%);
+            --messages-accent: #00897B; 
+            --create-post-bg: linear-gradient(135deg, #f0f4f8, #e6e9ed);
+            --create-post-accent: var(--accent-primary-global);
+
+
+            /* Section Specific Themes (Dark Mode) */
+            --dark-home-bg: linear-gradient(135deg, #1A222C 0%, #1B2F2A 100%);
+            --dark-home-accent: #4DB6AC;
+            --dark-explore-bg: linear-gradient(135deg, #2C2A24 0%, #302D26 100%);
+            --dark-explore-accent: var(--dark-highlight-gold-global);
+            --dark-games-bg: linear-gradient(120deg, #1A001A 0%, #2E0854 100%); /* Darker Purple for Games */
+            --dark-games-accent: #FFF59D; /* Lighter Yellow for Games Accent */
+            --dark-tutoring-bg: linear-gradient(135deg, #1A2233 0%, #1C1F3A 100%); 
+            --dark-tutoring-accent: #9FA8DA; 
+            --dark-profile-bg: linear-gradient(135deg, #1F243A 0%, #1A2035 100%);
+            --dark-profile-accent: var(--dark-accent-primary-global);
+            --dark-messages-bg: linear-gradient(135deg, #1A2B2A 0%, #1A2F32 100%);
+            --dark-messages-accent: #26A69A;
+            --dark-create-post-bg: linear-gradient(135deg, #1a202c, #2d3748);
+            --dark-create-post-accent: var(--dark-accent-primary-global);
+        }
+        body { 
+            font-family: 'Tajawal', sans-serif; 
+            background-color: var(--bg-primary-global); 
+            color: var(--text-primary-global); 
+            -webkit-tap-highlight-color: transparent; 
+            transition: background-color 0.5s, color 0.5s; 
+            font-smooth: antialiased; 
+            -webkit-font-smoothing: antialiased; 
+            font-size: 18.5px; 
+        }
+        .dark-mode body {
+            background-color: var(--dark-bg-primary-global);
+            color: var(--dark-text-primary-global);
+        }
+
+        .app-container { max-width: 420px; margin: 0 auto; background-color: var(--bg-primary-global); min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(0,0,0,0.08); overflow: hidden; border-radius: 24px; }
+        .dark-mode .app-container { background-color: var(--dark-bg-primary-global); }
+
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+        
+        .header-main { padding: 14px 18px; background-color: rgba(255,255,255,0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 2px 8px rgba(0,0,0,0.04); position: sticky; top: 0; z-index: 1000; transition: background-color 0.4s; }
+        .dark-mode .header-main { background-color: rgba(30,30,30,0.7); }
+        .header-title { color: var(--accent-primary-global); font-weight: 900; font-size: 2.3rem; letter-spacing: -0.75px; } 
+        .dark-mode .header-title { color: var(--dark-accent-primary-global); }
+        .header-icon-btn { font-size: 1.9rem; color: var(--text-secondary-global); transition: color 0.25s, transform 0.2s; cursor: pointer; position: relative; } 
+        .header-icon-btn:hover { color: var(--accent-primary-global); transform: scale(1.12); }
+        .dark-mode .header-icon-btn { color: var(--dark-text-secondary-global); }
+        .dark-mode .header-icon-btn:hover { color: var(--dark-accent-primary-global); }
+        .unread-badge { position: absolute; top: -5px; right: -7px; background-color: var(--danger-color-global); color: white; font-size: 0.7rem; font-weight: bold; width: 20px; height: 20px; border-radius: 50%; display: flex; justify-content: center; align-items: center; line-height: 1; box-shadow: 0 1px 6px rgba(229,62,62,0.6); } 
+        .dark-mode .unread-badge { background-color: var(--dark-danger-color-global); }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 420px; margin: 0 auto; background-color: rgba(255,255,255,0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--border-color-global); display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -6px 30px rgba(0,0,0,0.05); z-index: 1000; transition: background-color 0.4s, border-color 0.4s; }
+        .dark-mode .bottom-nav { background-color: rgba(30,30,30,0.7); border-top-color: var(--dark-border-color-global); }
+        .nav-item { flex: 1; text-align: center; padding: 6px 0; cursor: pointer; color: var(--text-secondary-global); transition: color 0.3s ease-in-out, transform 0.2s ease-in-out; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .nav-item.active .nav-icon { /* Dynamic color set by JS */ transform: scale(1.2) translateY(-3px); }
+        .nav-item.active .nav-text { /* Dynamic color set by JS */ font-weight: 700; }
+        .nav-item:active { transform: scale(0.92); }
+        .nav-icon { font-size: 2.1rem; margin-bottom: 0px; line-height: 1; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s; } 
+        .nav-text { font-size: 0.8rem; margin-top: 3px; transition: color 0.3s; } 
+        
+        .section, .view { display: none; animation: sectionLoadAnimation 0.7s cubic-bezier(0.165, 0.84, 0.44, 1.0); flex-grow: 1; overflow-y: auto; } 
+        .section.active, .view.active { display: block; }
+        @keyframes sectionLoadAnimation { from { opacity: 0; transform: translateY(30px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        /* Section Specific Backgrounds & Text Colors */
+        #home-section.active { background: var(--home-bg); --active-nav-icon-color: var(--home-accent); --active-nav-text-color: var(--home-accent); --active-nav-icon-color-dark: var(--dark-home-accent); --active-nav-text-color-dark: var(--dark-home-accent); }
+        .dark-mode #home-section.active { background: var(--dark-home-bg); }
+        #explore-section.active { background: var(--explore-bg); --active-nav-icon-color: var(--explore-accent); --active-nav-text-color: var(--explore-accent); --active-nav-icon-color-dark: var(--dark-explore-accent); --active-nav-text-color-dark: var(--dark-explore-accent); }
+        .dark-mode #explore-section.active { background: var(--dark-explore-bg); }
+        #tutoring-section.active { background: var(--tutoring-bg); --active-nav-icon-color: var(--tutoring-accent); --active-nav-text-color: var(--tutoring-accent); --active-nav-icon-color-dark: var(--dark-tutoring-accent); --active-nav-text-color-dark: var(--dark-tutoring-accent); } 
+        .dark-mode #tutoring-section.active { background: var(--dark-tutoring-bg); }
+        #profile-section.active, #other-user-profile-view.active { background: var(--profile-bg); --active-nav-icon-color: var(--profile-accent); --active-nav-text-color: var(--profile-accent); --active-nav-icon-color-dark: var(--dark-profile-accent); --active-nav-text-color-dark: var(--dark-profile-accent); }
+        .dark-mode #profile-section.active, .dark-mode #other-user-profile-view.active { background: var(--dark-profile-bg); }
+        #messages-view.active { background: var(--messages-bg); --active-nav-icon-color: var(--messages-accent); --active-nav-text-color: var(--messages-accent); --active-nav-icon-color-dark: var(--dark-messages-accent); --active-nav-text-color-dark: var(--dark-messages-accent); }
+        .dark-mode #messages-view.active { background: var(--dark-messages-bg); }
+        #games-section.active { background: var(--games-bg); --active-nav-icon-color: var(--games-accent); --active-nav-text-color: var(--games-accent); --active-nav-icon-color-dark: var(--dark-games-accent); --active-nav-text-color-dark: var(--dark-games-accent); }
+        .dark-mode #games-section.active { background: var(--dark-games-bg); }
+        #create-post-section.active { background: var(--create-post-bg); --active-nav-icon-color: var(--accent-primary-global); --active-nav-text-color: var(--accent-primary-global); --active-nav-icon-color-dark: var(--dark-accent-primary-global); --active-nav-text-color-dark: var(--dark-accent-primary-global); }
+        .dark-mode #create-post-section.active { background: var(--dark-create-post-bg); }
+
+
+        .splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(145deg, var(--accent-primary-global), #1A3A91); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 1s ease-out, visibility 1s ease-out; }
+        .splash-screen.hidden { opacity: 0; visibility: hidden; }
+        .splash-logo { font-family: 'Tajawal', sans-serif; font-weight: 900; font-size: 4.5rem; color: #FFFFFF; letter-spacing: -2px; text-shadow: 0 3px 6px rgba(0,0,0,0.25); }
+        .splash-subtitle { font-size: 1.35rem; color: var(--highlight-gold-global); opacity: 0.95; margin-top: 12px; letter-spacing: 0.5px; }
+        
+        .story-circle { width: 68px; height: 68px; border-radius: 50%; border: 3px solid; border-image-slice: 1; border-image-source: linear-gradient(to right, var(--accent-secondary-global), var(--highlight-gold-global), var(--accent-secondary-global)); padding: 3px; background-color: var(--bg-content); cursor: pointer; transition: transform 0.25s ease, box-shadow 0.25s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .dark-mode .story-circle { background-color: var(--dark-bg-content); border-image-source: linear-gradient(to right, var(--dark-accent-secondary-global), var(--dark-highlight-gold-global), var(--dark-accent-secondary-global));}
+        .story-circle:hover { transform: scale(1.07); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .story-circle img, .active-user-avatar img, .profile-avatar img, .search-result-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        
+        .post-card, .reel-card { background-color: var(--bg-content); border-radius: 16px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
+        .dark-mode .post-card, .dark-mode .reel-card { background-color: var(--dark-bg-content); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .post-media-container { position: relative; background-color: #e0e0e0; } 
+        .post-media-container img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: cover; }
+        .post-text-overlay { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); background-color: rgba(0,0,0,0.6); color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; text-align: center; max-width: 80%; backdrop-filter: blur(3px); }
+        .post-actions, .reel-actions { display: flex; justify-content: space-around; padding: 12px 16px; border-top: 1px solid var(--border-color-global); }
+        .dark-mode .post-actions, .dark-mode .reel-actions { border-top-color: var(--dark-border-color-global); }
+        .post-actions button, .reel-actions button { background: transparent; border: none; font-size: 1.5rem; color: var(--text-secondary-global); cursor: pointer; transition: color 0.2s, transform 0.2s; }
+        .dark-mode .post-actions button, .dark-mode .reel-actions button { color: var(--dark-text-secondary-global); }
+        .post-actions button:hover, .reel-actions button:hover { color: var(--accent-primary-global); transform: scale(1.15); }
+        .dark-mode .post-actions button:hover, .dark-mode .reel-actions button:hover { color: var(--dark-accent-primary-global); }
+        .post-actions .like-btn.liked, .reel-actions .like-btn.liked { color: var(--danger-color-global); animation: heartBeat 0.5s ease; }
+        @keyframes heartBeat {0%{transform:scale(1)} 25%{transform:scale(1.2)} 50%{transform:scale(1)} 75%{transform:scale(1.1)} 100%{transform:scale(1)}}
+
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.65); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.35s ease, visibility 0.35s ease; padding: 16px; }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content { background-color: var(--bg-content); padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); transition: background-color 0.4s, transform 0.35s ease; max-height: 90vh; display: flex; flex-direction: column; }
+        .dark-mode .modal-content { background-color: var(--dark-bg-content); }
+        .modal.active .modal-content { transform: scale(1); animation: modalPopIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes modalPopIn { from { transform: scale(0.9) translateY(10px); opacity: 0.5; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color-global); }
+        .dark-mode .modal-header { border-bottom-color: var(--dark-border-color-global); }
+        .modal-title { font-size: 1.25rem; font-weight: 700; color: var(--text-primary-global); }
+        .dark-mode .modal-title { color: var(--dark-text-primary-global); }
+        .modal-body { flex-grow: 1; overflow-y: auto; }
+        .modal-close-btn { font-size: 1.8rem; color: var(--text-secondary-global); transition: color 0.2s; }
+        .dark-mode .modal-close-btn { color: var(--dark-text-secondary-global); }
+        .modal-close-btn:hover { color: var(--text-primary-global); }
+        .dark-mode .modal-close-btn:hover { color: var(--dark-text-primary-global); }
+        
+        .chat-bubble { padding: 12px 18px; border-radius: 22px; margin-bottom: 12px; max-width: 80%; word-wrap: break-word; line-height: 1.5; font-size: 0.9rem; box-shadow: 0 3px 6px rgba(0,0,0,0.06); transition: transform 0.2s ease; }
+        .chat-bubble:hover { transform: translateY(-1px); }
+        .chat-bubble.sent { background: linear-gradient(to right, var(--accent-primary-global), #1A3A91); color: white; margin-left: auto; border-bottom-right-radius: 8px; }
+        .dark-mode .chat-bubble.sent { background: linear-gradient(to right, var(--dark-accent-primary-global), #5A8FFF); color: var(--dark-bg-primary-global); }
+        .chat-bubble.received { background-color: #F0F2F5; color: var(--text-primary-global); margin-right: auto; border-bottom-left-radius: 8px; }
+        .dark-mode .chat-bubble.received { background-color: #303030; color: var(--dark-text-primary-global); }
+        
+        .btn { padding: 14px 24px; border-radius: 12px; font-weight: 700; transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s; text-align: center; letter-spacing: 0.5px; }
+        .btn-primary { background-color: var(--accent-primary-global); color: white; box-shadow: 0 4px 12px rgba(11, 42, 112, 0.3); }
+        .dark-mode .btn-primary { background-color: var(--dark-accent-primary-global); box-shadow: 0 4px 12px rgba(108, 155, 255, 0.3); }
+        .btn-primary:hover { background-color: #081E4B; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(11, 42, 112, 0.4); }
+        .dark-mode .btn-primary:hover { background-color: #4A7EE0; box-shadow: 0 6px 16px rgba(108, 155, 255, 0.4); }
+        .btn-secondary { background-color: var(--accent-secondary-global); color: white; box-shadow: 0 4px 12px rgba(44, 191, 190, 0.3); }
+        .dark-mode .btn-secondary { background-color: var(--dark-accent-secondary-global); box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3); }
+        .btn-secondary:hover { background-color: #23A0A2; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(44, 191, 190, 0.4); }
+        .dark-mode .btn-secondary:hover { background-color: #3E95E0; box-shadow: 0 6px 16px rgba(88, 166, 255, 0.4); }
+        .btn-danger { background-color: var(--danger-color-global); color: white; box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3); }
+        .btn-danger:hover { background-color: #C53030; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(229, 62, 62, 0.4); }
+        
+
+        .loading-indicator { border: 4px solid rgba(255,255,255,0.25); border-top: 4px solid var(--highlight-gold-global); border-radius: 50%; width: 40px; height: 40px; animation: spin 1.2s linear infinite; margin: 16px auto; }
+        .splash-screen .loading-indicator { border-top-color: #FFFFFF; }
+        
+        .gemini-suggestion-item { background-color: #E6FFFA; border-right: 4px solid var(--accent-secondary-global); padding: 0.85rem 1.2rem; border-radius: 0.75rem; margin-bottom: 0.85rem; font-size: 0.925rem; transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease; color: var(--text-primary-global); box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .dark-mode .gemini-suggestion-item { background-color: #2A3B4D; border-right-color: var(--dark-accent-secondary-global); color: var(--dark-text-primary-global); }
+        .gemini-suggestion-item:hover { background-color: #C3F7EB; transform: translateX(-4px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        .dark-mode .gemini-suggestion-item:hover { background-color: #33475F; }
+
+        .input-field { width: 100%; padding: 14px 18px; border-radius: 12px; background-color: #F0F2F5; border: 1px solid var(--border-color-global); color: var(--text-primary-global); outline: none; transition: border-color 0.25s, box-shadow 0.25s, background-color 0.25s; font-size: 0.95rem; }
+        .dark-mode .input-field { background-color: #2A303C; border-color: #3A4250; color: var(--dark-text-primary-global); }
+        .input-field:focus { border-color: var(--accent-primary-global); background-color: var(--bg-content); box-shadow: 0 0 0 3px rgba(11, 42, 112, 0.15); }
+        .dark-mode .input-field:focus { border-color: var(--dark-accent-primary-global); background-color: var(--dark-bg-content); box-shadow: 0 0 0 3px rgba(108, 155, 255, 0.25); }
+
+        .voice-note-bubble { background-color: var(--accent-secondary-global); color: white; padding: 10px 16px; border-radius: 18px; display: flex; align-items: center; max-width: 200px; }
+        .dark-mode .voice-note-bubble { background-color: var(--dark-accent-secondary-global); }
+        .voice-note-bubble span { margin-left: 8px; font-size: 0.85rem; }
+        .waveform { display: flex; align-items: center; height: 20px; }
+        .waveform span { background-color: white; height: 100%; width: 2px; margin: 0 1px; animation: waveform-animate 0.8s infinite ease-in-out alternate; }
+        .waveform span:nth-child(2) { animation-delay: 0.2s; }
+        .waveform span:nth-child(3) { animation-delay: 0.4s; }
+        .waveform span:nth-child(4) { animation-delay: 0.6s; }
+        @keyframes waveform-animate { 0% { transform: scaleY(0.3); } 100% { transform: scaleY(1); } }
+
+        .zowar-space-card {
+            background: linear-gradient(135deg, var(--accent-primary-global), var(--accent-secondary-global));
+            color: white;
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .zowar-space-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.2);
+        }
+        .comment-item { border-bottom: 1px solid var(--border-color-global); padding: 10px 0; }
+        .comment-item:last-child { border-bottom: none; }
+        .dark-mode .comment-item { border-bottom-color: var(--dark-border-color-global); }
+        .alert-banner {
+            position: fixed;
+            top: 80px; 
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px); 
+            background-color: var(--accent-secondary-global);
+            color: white;
+            padding: 14px 22px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            z-index: 3000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .alert-banner.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+        .smart-reply-btn {
+            background-color: var(--accent-secondary-global);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem; /* text-xs */
+            margin: 2px;
+            transition: background-color 0.2s;
+        }
+        .smart-reply-btn:hover {
+            background-color: #17a297; /* Darker teal */
+        }
+        .dark-mode .smart-reply-btn {
+            background-color: var(--dark-accent-secondary-global);
+        }
+        .dark-mode .smart-reply-btn:hover {
+            background-color: #4A7EE0; /* Darker blue for dark mode */
+        }
+        .tutoring-card {
+            background-color: var(--bg-content);
+            border-radius: 18px; 
+            padding: 24px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+            text-align: center;
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+            cursor: pointer;
+            border: 1px solid var(--border-color-global);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 160px; 
+        }
+        .dark-mode .tutoring-card { background-color: var(--dark-bg-content); box-shadow: 0 8px 25px rgba(0,0,0,0.16); border-color: var(--dark-border-color-global); }
+        .tutoring-card:hover { transform: translateY(-6px) scale(1.04); box-shadow: 0 12px 35px rgba(0,0,0,0.09); }
+        .tutoring-card-icon { font-size: 3rem; margin-bottom: 14px; line-height: 1; color: var(--tutoring-accent); } 
+        .dark-mode .tutoring-card-icon { color: var(--dark-tutoring-accent); }
+        .tutoring-card h3 { font-weight: 800; font-size: 1.2rem; color: var(--text-primary-global); } 
+        .dark-mode .tutoring-card h3 { color: var(--dark-text-primary-global); }
+        .tutoring-role-btn {
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s, color 0.3s;
+            width: 100%;
+        }
+        .tutoring-role-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+        .tutoring-role-toggle-btn { 
+             border: 2px solid transparent;
+        }
+        .tutoring-role-toggle-btn.active-role {
+            background-color: var(--tutoring-accent) !important;
+            color: white !important;
+            border-color: var(--tutoring-accent) !important;
+        }
+        .dark-mode .tutoring-role-toggle-btn.active-role {
+             background-color: var(--dark-tutoring-accent) !important;
+             color: var(--dark-bg-primary) !important;
+             border-color: var(--dark-tutoring-accent) !important;
+        }
+        .game-card {
+            background-color: var(--bg-content);
+            border-radius: 18px; 
+            padding: 24px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+            text-align: center;
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+            cursor: pointer;
+            border: 1px solid var(--border-color-global);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 160px; 
+        }
+        .dark-mode .game-card { background-color: var(--dark-bg-content); box-shadow: 0 8px 25px rgba(0,0,0,0.16); border-color: var(--dark-border-color-global); }
+        .game-card:hover { transform: translateY(-6px) scale(1.04); box-shadow: 0 12px 35px rgba(0,0,0,0.09); }
+        .game-card-icon { font-size: 3.5rem; margin-bottom: 18px; line-height: 1; } 
+        .game-card h3 { font-weight: 800; font-size: 1.3rem; color: var(--text-primary-global); margin-bottom: 8px; } 
+        .dark-mode .game-card h3 { color: var(--dark-text-primary-global); }
+         .game-card p { font-size: 0.9rem; color: var(--text-secondary-global); } 
+        .dark-mode .game-card p { color: var(--dark-text-secondary-global); }
+
+
+    </style>
+</head>
+<body class="dark-mode"> 
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-logo">Zowar</div>
+        <div class="splash-subtitle">زُوّار</div>
+        <div class="loading-indicator mt-12"></div>
+    </div>
+
+    <div class="app-container">
+        <header class="header-main">
+             <div class="flex justify-between items-center">
+                <h1 class="header-title">Zowar</h1>
+                <div class="flex items-center space-x-5 rtl:space-x-reverse">
+                    <button id="open-search-modal-btn" class="header-icon-btn search-btn">⌕</button> 
+                    <button id="messages-header-btn" class="header-icon-btn messages-btn">
+                        💬
+                        <span id="unread-messages-badge" class="unread-badge" style="display: none;">0</span>
+                    </button> 
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section id="home-section" class="section active p-0">
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200">القصص</h2>
+                        <span class="text-sm font-semibold cursor-pointer hover:underline" style="color: var(--home-accent);">شاهد الكل</span>
+                    </div>
+                    <div id="stories-container" class="flex space-x-3 rtl:space-x-reverse overflow-x-auto pb-3 -mx-4 px-4">
+                        </div>
+                </div>
+                <div class="px-4">
+                    <button id="trigger-create-post-btn" class="btn btn-primary w-full mb-4 text-lg">📝 إنشاء منشور جديد</button>
+                </div>
+                <div id="posts-feed" class="px-2 sm:px-0">
+                </div>
+            </section>
+
+            <section id="explore-section" class="section p-4">
+                <h2 class="text-2xl font-extrabold text-gray-800 dark:text-gray-200 mb-6">استكشف عوالم Zowar</h2>
+                <div class="mb-6 p-6 rounded-xl shadow-xl bg-gradient-to-r from-[var(--accent-secondary-global)] to-[var(--accent-primary-global)] text-white cursor-pointer transition-transform hover:scale-[1.02]" id="find-nearby-people-card">
+                    <h3 class="text-xl font-bold mb-1">الأشخاص القريبون 📍</h3>
+                    <p class="text-sm opacity-80">اكتشف وتواصل مع مستخدمي Zowar في محيطك الآن.</p>
+                </div>
+                <div id="nearby-people-results" class="mb-8" style="display:none;">
+                    <div class="loading-indicator border-top-[var(--accent-primary-global)]"></div>
+                    <p class="text-center text-md text-gray-500 dark:text-gray-400">جاري البحث عن أشخاص قريبين...</p>
+                    <div id="nearby-users-list" class="mt-4 space-y-3"></div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4"> Zowar Spaces <span class="text-sm px-2.5 py-1 bg-[var(--highlight-gold-global)] text-black rounded-full align-middle shadow-sm">مباشر</span></h3>
+                    <div id="zowar-spaces-container" class="space-y-4"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">الغرف الجغرافية</h3>
+                    <div id="geo-rooms-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6"></div>
+                    <div class="mt-6 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700">
+                        <h4 class="font-bold text-lg text-[var(--accent-secondary-global)] dark:text-[var(--dark-accent-secondary-global)] mb-2">✨ أفكار لبدء المحادثة</h4>
+                        <p class="text-md text-gray-600 dark:text-gray-400 mb-4">
+                            تحتاج إلهام؟ دع الذكاء الاصطناعي يقترح مواضيع شيقة!
+                        </p>
+                        <button id="generate-icebreakers-btn" class="btn btn-secondary w-full text-md">
+                            💡 اقترح مواضيع الآن
+                        </button>
+                        <div id="loading-gemini" class="mt-4 text-center" style="display: none;">
+                            <div class="loading-indicator border-top-[var(--accent-secondary-global)]"></div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">جاري توليد الأفكار...</p>
+                        </div>
+                        <div id="icebreakers-suggestions" class="mt-5 text-md space-y-3"></div>
+                        <p id="gemini-error-message" class="mt-3 text-sm text-red-500 dark:text-red-400" style="display: none;"></p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="games-section" class="section p-4">
+                 <h2 class="text-3xl font-black text-gray-800 dark:text-gray-100 mb-8 text-center" style="color: var(--games-accent);">Zowar Play 🎮</h2>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="game-card" data-game="ludo" style="background-color: #FFEBEE; --games-accent-card: #D32F2F;">
+                        <div class="game-card-icon" style="color: var(--games-accent-card);">🎲</div>
+                        <h3>يلا لودو</h3>
+                        <p>كلاسيكية ممتعة</p>
+                    </div>
+                    <div class="game-card" data-game="dominoes" style="background-color: #E8EAF6; --games-accent-card: #303F9F;">
+                        <div class="game-card-icon" style="font-family: 'Arial Unicode MS', 'Lucida Sans Unicode', 'sans-serif'; font-size: 2.8rem; color: var(--games-accent-card);"> Domino</div>
+                        <h3>دومينو</h3>
+                        <p>تحدي وتركيز</p>
+                    </div>
+                    <div class="game-card" data-game="snakes-ladders" style="background-color: #E8F5E9; --games-accent-card: #388E3C;">
+                        <div class="game-card-icon" style="color: var(--games-accent-card);">🐍</div>
+                        <h3>حية ودرج</h3>
+                        <p>حظ ومرح</p>
+                    </div>
+                    <div class="game-card" data-game="basketball" style="background-color: #FFF3E0; --games-accent-card: #F57C00;">
+                        <div class="game-card-icon" style="color: var(--games-accent-card);">🏀</div>
+                        <h3>رميات السلة</h3>
+                        <p>اختبر دقتك</p>
+                    </div>
+                    <div class="game-card" data-game="quiz" style="background-color: #E1F5FE; --games-accent-card: #0288D1;">
+                        <div class="game-card-icon" style="color: var(--games-accent-card);">❓</div>
+                        <h3>أسئلة عامة</h3>
+                        <p>تحدي المعلومات</p>
+                    </div>
+                     <div class="game-card" data-game="challenges" style="background-color: #FFFDE7; --games-accent-card: #FBC02D;">
+                        <div class="game-card-icon" style="color: var(--games-accent-card);">🏆</div>
+                        <h3>تحديات Zowar</h3>
+                        <p>أثبت مهارتك</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="game-lobby-view" class="view p-6" style="background: var(--games-bg);">
+                <button id="back-to-games-list-btn" class="mb-6 text-md font-semibold flex items-center" style="color: var(--games-accent);">❮ <span class="mr-1">العودة للألعاب</span></button>
+                <h2 id="game-lobby-title" class="text-3xl font-bold text-center mb-8" style="color: var(--games-accent);"></h2>
+                <div id="game-specific-ui" class="mb-8 p-5 bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-xl shadow-lg"></div>
+                <div class="bg-white/80 dark:bg-black/50 backdrop-blur-md p-5 rounded-lg shadow-xl">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">اللعب مع الأصدقاء (4 لاعبين)</h3>
+                    <div id="game-lobby-players" class="space-y-3 mb-5">
+                        </div>
+                    <div class="flex space-x-3 rtl:space-x-reverse">
+                        <button class="btn btn-secondary flex-1 text-md" style="background-color: var(--games-accent);">➕ دعوة صديق</button>
+                        <button class="btn btn-primary flex-1 text-md" style="background-color: var(--accent-primary-global);">🚀 ابدأ اللعب!</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tutoring-section" class="section p-6">
+                 <h2 class="text-3xl font-black text-gray-800 dark:text-gray-100 mb-8 text-center" style="color: var(--tutoring-accent);">مركز Zowar التعليمي 📚</h2>
+                 <div id="tutoring-role-selection" class="space-y-5 mb-8">
+                    <div class="flex items-center justify-center p-1 bg-gray-200 dark:bg-gray-700 rounded-xl">
+                        <button id="iam-teacher-btn" class="tutoring-role-toggle-btn flex-1 py-3 px-4 rounded-lg text-md font-semibold transition-all duration-300">أنا مدرس</button>
+                        <button id="iam-student-btn" class="tutoring-role-toggle-btn flex-1 py-3 px-4 rounded-lg text-md font-semibold transition-all duration-300 active-role">أنا طالب</button>
+                    </div>
+                 </div>
+
+                 <div id="tutoring-student-view" style="display:none;">
+                    <h3 class="text-xl font-bold mb-5 text-center text-gray-700 dark:text-gray-300">اختر المادة الدراسية:</h3>
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="tutoring-card" data-subject="math"> <div class="tutoring-card-icon">🧮</div> <h3>الرياضيات</h3> </div>
+                        <div class="tutoring-card" data-subject="science"> <div class="tutoring-card-icon">🔬</div> <h3>العلوم</h3> </div>
+                        <div class="tutoring-card" data-subject="arabic"> <div class="tutoring-card-icon" style="font-size: 2.5rem;">ب</div> <h3>اللغة العربية</h3> </div>
+                        <div class="tutoring-card" data-subject="history"> <div class="tutoring-card-icon">📜</div> <h3>التاريخ</h3> </div>
+                        <div class="tutoring-card" data-subject="geography"> <div class="tutoring-card-icon">🌍</div> <h3>الجغرافيا</h3> </div>
+                        <div class="tutoring-card" data-subject="english"> <div class="tutoring-card-icon" style="font-size: 2.5rem;">Aa</div> <h3>اللغة الإنجليزية</h3> </div>
+                        <div class="tutoring-card" data-subject="islamic"> <div class="tutoring-card-icon">🕌</div> <h3>إسلامية</h3> </div>
+                        <div class="tutoring-card" data-subject="biology"> <div class="tutoring-card-icon">🧬</div> <h3>أحياء</h3> </div>
+                    </div>
+                 </div>
+
+                 <div id="tutoring-teacher-view" style="display:none;">
+                    <h3 class="text-xl font-bold mb-5 text-center text-gray-700 dark:text-gray-300">اختر تخصصك للتدريس:</h3>
+                    <div id="teacher-subject-selection" class="grid grid-cols-2 gap-5 mb-6">
+                        <div class="tutoring-card" data-subject="math"> <div class="tutoring-card-icon">🧮</div> <h3>الرياضيات</h3> </div>
+                        <div class="tutoring-card" data-subject="science"> <div class="tutoring-card-icon">🔬</div> <h3>العلوم</h3> </div>
+                        <div class="tutoring-card" data-subject="arabic"> <div class="tutoring-card-icon" style="font-size: 2.5rem;">ب</div> <h3>اللغة العربية</h3> </div>
+                        <div class="tutoring-card" data-subject="history"> <div class="tutoring-card-icon">📜</div> <h3>التاريخ</h3> </div>
+                        <div class="tutoring-card" data-subject="geography"> <div class="tutoring-card-icon">🌍</div> <h3>الجغرافيا</h3> </div>
+                        <div class="tutoring-card" data-subject="english"> <div class="tutoring-card-icon" style="font-size: 2.5rem;">Aa</div> <h3>اللغة الإنجليزية</h3> </div>
+                        <div class="tutoring-card" data-subject="islamic"> <div class="tutoring-card-icon">🕌</div> <h3>إسلامية</h3> </div>
+                        <div class="tutoring-card" data-subject="biology"> <div class="tutoring-card-icon">🧬</div> <h3>أحياء</h3> </div>
+                    </div>
+                    <div id="teacher-publish-lesson-area" style="display:none;" class="mt-6 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-xl">
+                        <h4 id="teacher-selected-subject" class="text-lg font-semibold mb-4 text-center" style="color: var(--tutoring-accent);"></h4>
+                        <button class="btn btn-primary w-full text-md">➕ نشر درس جديد</button>
+                    </div>
+                 </div>
+
+                 <div id="tutoring-subject-details" class="mt-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-xl" style="display:none;">
+                    <h3 id="tutoring-subject-title" class="text-xl font-bold mb-3 text-center" style="color: var(--tutoring-accent);"></h3>
+                    <p id="tutoring-subject-content" class="text-md text-gray-700 dark:text-gray-300 text-center leading-relaxed"></p>
+                 </div>
+            </section>
+
+            <section id="create-post-section" class="section p-4 flex flex-col items-center justify-center">
+                <div class="w-full max-w-md bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl">
+                    <h2 class="text-xl font-bold text-center mb-6 text-gray-800 dark:text-gray-200">إنشاء منشور جديد</h2>
+                    <div id="create-post-step1">
+                        <label for="media-upload" class="block mb-4 text-sm font-medium text-gray-700 dark:text-gray-300">اختر صورة أو فيديو:</label>
+                        <input type="file" id="media-upload" accept="image/*,video/*" class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 rtl:file:ml-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[var(--accent-secondary-global)] file:text-white hover:file:bg-[var(--accent-secondary-global)]/90 cursor-pointer mb-6">
+                        <button id="next-to-text-overlay-btn" class="btn btn-primary w-full">التالي</button>
+                    </div>
+                    <div id="create-post-step2" style="display:none;">
+                        <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">معاينة وإضافة نص:</label>
+                        <div class="post-media-container mb-4 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center min-h-[250px] relative">
+                            <img id="post-preview-image" src="#" alt="Post preview" style="display:none;" class="max-h-[350px] rounded-lg object-contain">
+                            <video id="post-preview-video" controls style="display:none;" class="max-h-[350px] rounded-lg object-contain"></video>
+                            <p id="post-preview-placeholder" class="text-gray-400 dark:text-gray-500">لا توجد وسائط مختارة</p>
+                            <div id="preview-text-overlay" class="post-text-overlay" style="display:none;"></div>
+                        </div>
+                        <textarea id="post-text-input" rows="2" class="input-field mb-4" placeholder="اكتب النص الذي سيظهر على الصورة/الفيديو..."></textarea>
+                        <div class="mb-4">
+                            <textarea id="post-caption-input" rows="3" class="input-field" placeholder="اكتب تعليقًا لمنشورك..."></textarea>
+                            <button id="generate-caption-btn" class="mt-2 text-xs text-[var(--accent-secondary-global)] dark:text-[var(--dark-accent-secondary-global)] font-semibold hover:underline">✨ اقترح تعليقًا (AI)</button>
+                            <div id="caption-loading-spinner" class="mt-1 text-xs text-gray-500 dark:text-gray-400" style="display:none;">جاري اقتراح تعليق...</div>
+                        </div>
+                        <div class="flex space-x-2 rtl:space-x-reverse">
+                            <button id="back-to-media-upload-btn" class="btn bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-500 w-1/2">السابق</button>
+                            <button id="submit-post-btn" class="btn btn-primary w-1/2">نشر</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="profile-section" class="section p-0 pt-0">
+                 <div id="user-profile-content"></div>
+            </section>
+            
+            <section id="other-user-profile-view" class="view p-0 pt-0">
+                 <div id="other-user-profile-content"></div>
+            </section>
+
+            <section id="messages-view" class="view h-full flex flex-col">
+                <header class="p-3 bg-gray-50 dark:bg-gray-800 flex items-center space-x-3 rtl:space-x-reverse shadow-sm border-b border-[var(--border-color-global)]">
+                    <button id="back-to-main-from-messages" class="text-2xl text-gray-500 dark:text-gray-400 hover:text-[var(--accent-primary-global)]">❮</button>
+                    <h3 class="font-semibold text-lg text-gray-800 dark:text-gray-200 flex-grow text-center">الرسائل</h3>
+                    <div class="w-8"></div> 
+                </header>
+                <div id="chat-list-view" class="flex-grow">
+                    <div class="p-4 border-b border-[var(--border-color-global)]">
+                        <input type="text" placeholder="ابحث في المحادثات..." class="input-field">
+                    </div>
+                    <h2 class="text-md font-semibold text-gray-700 dark:text-gray-300 p-4 pb-2">الأشخاص النشطون</h2>
+                     <div id="active-users-messages-container" class="flex space-x-3 rtl:space-x-reverse overflow-x-auto px-4 pb-4">
+                        </div>
+                    <h2 class="text-md font-semibold text-gray-700 dark:text-gray-300 p-4 pt-1">كل الرسائل</h2>
+                    <div id="chat-list-items" class="divide-y divide-[var(--border-color-global)]">
+                    </div>
+                </div>
+                <div id="chat-view" style="display: none;" class="h-full flex flex-col">
+                    <header class="p-3 bg-gray-50 dark:bg-gray-800 flex items-center space-x-3 rtl:space-x-reverse shadow-sm border-b border-[var(--border-color-global)]">
+                        <button id="back-to-chat-list" class="text-2xl text-gray-500 dark:text-gray-400 hover:text-[var(--accent-primary-global)]">❮</button>
+                        <img id="chat-view-avatar" src="https://placehold.co/40x40" alt="User Avatar" class="w-10 h-10 rounded-full">
+                        <div>
+                            <h3 id="chat-view-name" class="font-semibold text-gray-800 dark:text-gray-200">اسم المستخدم</h3>
+                            <p id="chat-view-status" class="text-xs text-green-500">نشط الآن</p>
+                        </div>
+                        <button class="mr-auto rtl:ml-auto rtl:mr-0 text-2xl text-[var(--accent-secondary-global)] hover:opacity-80" id="call-btn">✆</button>
+                    </header>
+                    <div id="chat-messages" class="flex-grow p-4 space-y-3 overflow-y-auto bg-gray-50 dark:bg-gray-900/40">
+                    </div>
+                    <div id="smart-reply-container" class="p-2 text-center space-x-1 rtl:space-x-reverse bg-gray-100 dark:bg-gray-800 border-t border-[var(--border-color-global)]" style="display:none;">
+                    </div>
+                    <footer class="p-3 bg-gray-100 dark:bg-gray-800 flex items-center border-t border-[var(--border-color-global)] space-x-2 rtl:space-x-reverse">
+                        <button id="voice-note-btn" class="p-3 text-xl text-gray-500 dark:text-gray-400 hover:text-[var(--accent-secondary-global)]">🎙️</button>
+                        <input id="message-input" type="text" placeholder="اكتب رسالتك..." class="flex-grow p-3 rounded-full bg-white dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary-global)] outline-none text-sm">
+                        <button id="send-message-btn" class="p-3 text-2xl text-[var(--accent-primary-global)] dark:text-[var(--dark-accent-primary-global)] hover:opacity-80">➤</button>
+                    </footer>
+                    <div id="voice-recording-indicator" style="display:none;" class="p-3 bg-red-500 text-white text-center text-sm">
+                        🔴 جاري التسجيل... <span id="voice-timer">0:00</span> (انقر للإيقاف)
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <nav class="bottom-nav">
+            <div class="nav-item active" data-section="home-section">
+                <div class="nav-icon">🏠</div> <span class="nav-text">الرئيسية</span>
+            </div>
+            <div class="nav-item" data-section="explore-section">
+                <div class="nav-icon">✨</div> <span class="nav-text">استكشف</span>
+            </div>
+            <div class="nav-item" data-section="games-section">
+                <div class="nav-icon">🎮</div> <span class="nav-text">ألعاب</span>
+            </div>
+            <div class="nav-item" data-section="tutoring-section">
+                <div class="nav-icon">📚</div> <span class="nav-text">تدريس</span>
+            </div>
+            <div class="nav-item" data-section="profile-section" data-user-id="currentUser"> 
+                <div class="nav-icon">👤</div> <span class="nav-text">ملفي</span>
+            </div>
+        </nav>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">الإعدادات</h3>
+                <button id="close-settings-modal" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body space-y-6">
+                <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <label for="dark-mode-toggle" class="text-gray-700 dark:text-gray-300 text-sm font-medium">الوضع الداكن</label>
+                    <button id="dark-mode-toggle" class="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full p-1 flex items-center transition-colors duration-300 ease-in-out focus:outline-none ring-2 ring-transparent focus:ring-[var(--accent-primary-global)]">
+                        <span class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out translate-x-0 dark:translate-x-7"></span>
+                    </button>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <label for="sound-toggle" class="text-gray-700 dark:text-gray-300 text-sm font-medium">الأصوات التفاعلية</label>
+                    <button id="sound-toggle" class="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full p-1 flex items-center transition-colors duration-300 ease-in-out focus:outline-none ring-2 ring-transparent focus:ring-[var(--accent-primary-global)]">
+                        <span class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out translate-x-0"></span>
+                    </button>
+                </div>
+                <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">دورك في قسم التدريس:</label>
+                    <div class="flex items-center justify-center p-1 bg-gray-200 dark:bg-gray-600 rounded-xl">
+                        <button id="role-teacher-settings-btn" class="tutoring-role-toggle-btn flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all duration-300">مدرس</button>
+                        <button id="role-student-settings-btn" class="tutoring-role-toggle-btn flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all duration-300 active-role">طالب</button>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <span class="text-gray-700 dark:text-gray-300 text-sm font-medium">إشعارات الرسائل</span>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100">مفعلة</span>
+                </div>
+            </div>
+            <button class="mt-10 w-full btn btn-primary">حفظ التغييرات</button>
+        </div>
+    </div>
+    
+    <div id="calling-screen" class="fixed inset-0 bg-gradient-to-br from-[var(--accent-primary-global)] to-[#1c3faa] text-white flex flex-col items-center justify-center z-[5000] p-8" style="display:none;">
+        <img id="calling-avatar" src="https://placehold.co/120x120/FFFFFF/0A2463?text=C" alt="Calling Avatar" class="w-32 h-32 rounded-full mb-6 border-4 border-white/50 shadow-2xl">
+        <h2 id="calling-name" class="text-3xl font-extrabold mb-2 text-shadow">اسم المتصل</h2>
+        <p id="calling-status-text" class="text-lg text-white/80 mb-10">جاري الاتصال...</p>
+        <div class="flex space-x-6 rtl:space-x-reverse">
+             <button class="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold p-4 rounded-full text-2xl w-16 h-16 flex items-center justify-center transition-all duration-200 ease-out hover:scale-110">🔇</button>
+             <button id="end-call-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold p-4 rounded-full text-2xl w-20 h-20 flex items-center justify-center transform scale-110 shadow-lg transition-all duration-200 ease-out hover:scale-125">✆</button>
+             <button class="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold p-4 rounded-full text-2xl w-16 h-16 flex items-center justify-center transition-all duration-200 ease-out hover:scale-110">🔊</button>
+        </div>
+    </div>
+    
+    <div id="ai-highlight-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title text-[var(--accent-secondary-global)] flex items-center">✨ ملخص بالذكاء الاصطناعي</h3>
+                <button id="close-ai-highlight-modal" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="ai-summary-text" class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                    هذا المنشور يعرض لقطات مذهلة من رحلة استكشافية إلى جبال الألب السويسرية، مع التركيز على المناظر الطبيعية الخلابة وتجربة تسلق الجبال المثيرة. ينصح به لعشاق الطبيعة والمغامرات!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-modal" class="modal">
+        <div class="modal-content w-full h-full sm:h-auto sm:max-h-[80vh]">
+            <div class="modal-header">
+                <h3 class="modal-title">البحث عن مستخدمين</h3>
+                <button id="close-search-modal-btn" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input id="user-search-input" type="text" placeholder="اكتب اسم المستخدم أو الاسم..." class="input-field mb-4">
+                <div id="search-results-container" class="space-y-3 max-h-[60vh] overflow-y-auto">
+                    </div>
+            </div>
+        </div>
+    </div>
+        
+    <div id="post-comments-modal" class="modal">
+        <div class="modal-content w-full h-full sm:h-auto sm:max-h-[80vh]">
+            <div class="modal-header">
+                <h3 class="modal-title">تعليقات المنشور</h3>
+                <button id="close-post-comments-modal-btn" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="post-comments-list" class="space-y-3 mb-4 max-h-[50vh] overflow-y-auto">
+                    </div>
+                <div class="comment-input-area">
+                    <input id="new-post-comment-input" type="text" placeholder="أضف تعليقًا..." class="input-field flex-grow">
+                    <button id="submit-post-comment-btn" class="btn btn-secondary text-sm p-3 ml-2 rtl:mr-2 rtl:ml-0">إرسال</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert-banner" class="alert-banner">
+        <span id="alert-message"></span>
+    </div>
+
+
+    <script>
+        // Firebase Config (Provided by user - For a real app, keep this secure)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPIcg7RFGlslmgiO0C0miuYztPaxB5S2U", 
+            authDomain: "zowar-a9c69.firebaseapp.com",
+            databaseURL: "https://zowar-a9c69-default-rtdb.firebaseio.com",
+            projectId: "zowar-a9c69",
+            storageBucket: "zowar-a9c69.appspot.com", 
+            messagingSenderId: "200949324467",
+            appId: "1:200949324467:web:54e03ed49857e0af7caec6",
+            measurementId: "G-XBMY1KN43S"
+        };
+
+        // Mock Firebase SDK for single-file prototype
+        const mockFirebase = {
+            initializeApp: (config) => { console.log("Firebase Mock Initialized:", config); return { name: "[DEFAULT]" }; },
+            getAuth: () => ({ currentUser: { uid: "mockUserId", isAnonymous: true }, signInAnonymously: () => Promise.resolve({ user: { uid: "mockUserId", isAnonymous: true } }) }),
+            getFirestore: () => ({
+                doc: (db, path, id) => ({ path: `${path}/${id}` }),
+                collection: (db, path) => ({ path }),
+                getDoc: (docRef) => Promise.resolve({ exists: () => true, data: () => mockFirebase.mockDbData[docRef.path.split('/').pop()] || {} }), 
+                setDoc: (docRef, data) => { console.log("Mock Firestore Set:", docRef.path, data); mockFirebase.mockDbData[docRef.path.split('/').pop()] = data; return Promise.resolve(); },
+                addDoc: (collRef, data) => { const id = `mockDoc${Object.keys(mockFirebase.mockDbData).length}`; mockFirebase.mockDbData[id] = data; console.log("Mock Firestore Add:", collRef.path, id, data); return Promise.resolve({ id }); },
+                onSnapshot: (query, callback) => { console.log("Mock onSnapshot registered for:", query.path); setTimeout(() => callback({ docs: Object.values(mockFirebase.mockDbData).map(d => ({ id: d.id || "mockId", data: () => d })) }), 100); return () => {}; }, 
+            }),
+            getAnalytics: () => ({ logEvent: (name, params) => console.log("Mock Analytics Event:", name, params) }),
+            mockDbData: {} 
+        };
+
+        const app = mockFirebase.initializeApp(firebaseConfig);
+        const auth = mockFirebase.getAuth();
+        const db = mockFirebase.getFirestore();
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Element Selectors ---
+            const getEl = (id) => document.getElementById(id);
+            const querySelAll = (sel) => document.querySelectorAll(sel);
+
+            const splashScreen = getEl('splash-screen');
+            const sections = querySelAll('.section');
+            const views = querySelAll('.view');
+            const navItems = querySelAll('.nav-item');
+            const postsFeed = getEl('posts-feed'); 
+            const aiHighlightModal = getEl('ai-highlight-modal');
+            const closeAiHighlightModalBtn = getEl('close-ai-highlight-modal');
+            
+            const messagesHeaderBtn = getEl('messages-header-btn');
+            const unreadMessagesBadge = getEl('unread-messages-badge');
+            const messagesView = getEl('messages-view'); 
+            const chatListView = getEl('chat-list-view'); 
+            const chatView = getEl('chat-view'); 
+            const chatListItems = getEl('chat-list-items'); 
+            const backToChatListBtn = getEl('back-to-chat-list');
+            const backToMainFromMessagesBtn = getEl('back-to-main-from-messages'); 
+            const messageInput = getEl('message-input');
+            const sendMessageBtn = getEl('send-message-btn');
+            const voiceNoteBtn = getEl('voice-note-btn');
+            const voiceRecordingIndicator = getEl('voice-recording-indicator');
+            const voiceTimer = getEl('voice-timer');
+            const smartReplyContainer = getEl('smart-reply-container');
+            
+            const settingsModal = getEl('settings-modal');
+            const closeSettingsModalBtn = getEl('close-settings-modal');
+            const darkModeToggleBtn = getEl('dark-mode-toggle');
+            const soundToggleBtn = getEl('sound-toggle');
+            const soundToggleSpan = soundToggleBtn ? soundToggleBtn.querySelector('span') : null;
+            const roleTeacherSettingsBtn = getEl('role-teacher-settings-btn');
+            const roleStudentSettingsBtn = getEl('role-student-settings-btn');
+            
+            const callBtn = getEl('call-btn');
+            const callingScreen = getEl('calling-screen');
+            const endCallBtn = getEl('end-call-btn');
+            
+            const generateIcebreakersBtn = getEl('generate-icebreakers-btn');
+            const icebreakersSuggestionsDiv = getEl('icebreakers-suggestions');
+            const loadingGemini = getEl('loading-gemini');
+            const geminiErrorMessageEl = getEl('gemini-error-message');
+            
+            const openSearchModalBtn = getEl('open-search-modal-btn');
+            const searchModal = getEl('search-modal');
+            const closeSearchModalBtn = getEl('close-search-modal-btn');
+            const userSearchInput = getEl('user-search-input');
+            const searchResultsContainer = getEl('search-results-container');
+            
+            const userProfileContent = getEl('user-profile-content');
+            const otherUserProfileContent = getEl('other-user-profile-content');
+            const otherUserProfileView = getEl('other-user-profile-view');
+            
+            const postCommentsModal = getEl('post-comments-modal');
+            const closePostCommentsModalBtn = getEl('close-post-comments-modal-btn');
+            const postCommentsList = getEl('post-comments-list');
+            const newPostCommentInput = getEl('new-post-comment-input');
+            const submitPostCommentBtn = getEl('submit-post-comment-btn');
+
+            const alertBanner = getEl('alert-banner');
+            const alertMessage = getEl('alert-message');
+
+            const triggerCreatePostBtn = getEl('trigger-create-post-btn'); 
+            const createPostSection = getEl('create-post-section'); 
+            const createPostStep1 = getEl('create-post-step1');
+            const createPostStep2 = getEl('create-post-step2');
+            const mediaUploadInput = getEl('media-upload');
+            const nextToTextOverlayBtn = getEl('next-to-text-overlay-btn');
+            const postPreviewImage = getEl('post-preview-image');
+            const postPreviewVideo = getEl('post-preview-video');
+            const postPreviewPlaceholder = getEl('post-preview-placeholder');
+            const previewTextOverlay = getEl('preview-text-overlay');
+            const postTextInput = getEl('post-text-input');
+            const postCaptionInput = getEl('post-caption-input');
+            const generateCaptionBtn = getEl('generate-caption-btn');
+            const captionLoadingSpinner = getEl('caption-loading-spinner');
+            const backToMediaUploadBtn = getEl('back-to-media-upload-btn');
+            const submitPostBtn = getEl('submit-post-btn');
+            let uploadedMediaFile = null;
+
+            const findNearbyPeopleCard = getEl('find-nearby-people-card');
+            const nearbyPeopleResults = getEl('nearby-people-results');
+            const nearbyUsersList = getEl('nearby-users-list');
+            const storiesContainer = getEl('stories-container') || querySelAll('#home-section .overflow-x-auto')[0];
+            const zowarSpacesContainer = getEl('zowar-spaces-container') || querySelAll('#explore-section .mb-8 .space-y-4')[0];
+            const geoRoomsGrid = getEl('geo-rooms-grid') || querySelAll('#explore-section > div:last-child .grid')[0]; 
+            const activeUsersMessagesContainer = getEl('active-users-messages-container');
+
+            const gamesSection = getEl('games-section');
+            const gameLobbyView = getEl('game-lobby-view');
+            const gameLobbyTitle = getEl('game-lobby-title');
+            const gameSpecificUI = getEl('game-specific-ui');
+            const gameLobbyPlayers = getEl('game-lobby-players');
+            const backToGamesListBtn = getEl('back-to-games-list-btn');
+            
+            const tutoringSection = getEl('tutoring-section');
+            const tutoringRoleSelection = getEl('tutoring-role-selection');
+            const iamStudentBtn = getEl('iam-student-btn');
+            const iamTeacherBtn = getEl('iam-teacher-btn');
+            const tutoringStudentView = getEl('tutoring-student-view');
+            const tutoringTeacherView = getEl('tutoring-teacher-view');
+            const teacherSubjectSelection = getEl('teacher-subject-selection');
+            const teacherPublishLessonArea = getEl('teacher-publish-lesson-area');
+            const teacherSelectedSubjectEl = getEl('teacher-selected-subject');
+            const tutoringSubjectDetails = getEl('tutoring-subject-details');
+            const tutoringSubjectTitle = getEl('tutoring-subject-title');
+            const tutoringSubjectContent = getEl('tutoring-subject-content');
+
+
+            let isRecording = false;
+            let voiceRecordInterval;
+            let voiceRecordSeconds = 0;
+            let currentOpenPostIdForComment = null; 
+            let unreadMessagesCount = 3; 
+            let soundsEnabled = true; 
+            let currentTutoringRole = 'student'; 
+
+            let uiClickSynth, notificationSynth, messageSendSynth, callRingingSynth, callingProgressSynth, postSentSynth, gameSelectSynth, diceRollSynth, basketballShootSynth, quizCorrectSynth, quizWrongSynth;
+            const masterVolume = -18; 
+
+            // --- Mock Data ---
+            const mockUsers = [
+                { id: "currentUser", username: "zawar_king", displayName: "ملك الزوار", avatar: "https://source.unsplash.com/random/100x100?king,man,handsome", bio: "أعيش الحياة بلحظاتها، أشارككم إبداعاتي وتجاربي الفريدة. Zowar هو عالمي!", postsCount: 152, followers: 2580, following: 310, comments: [ {postId: 1, text: "إبداع لا يوصف!"}, {postId:2, text: "هذا ما نحتاجه تماماً."} ] },
+                { id: "user2", username: "explorer_ali", displayName: "علي المستكشف", avatar: "https://source.unsplash.com/random/100x100?man,traveler,adventure", bio: "رحالة ومصور فوتوغرافي. أشارككم مغامراتي حول العالم.", postsCount: 250, followers: 5200, following: 150, comments: [] },
+                { id: "user3", username: "chef_fatima", displayName: "الشيف فاطمة", avatar: "https://source.unsplash.com/random/100x100?woman,chef,food", bio: "أعشق الطبخ ومشاركة وصفاتي الشهية. تابعوني لتذوق الإبداع.", postsCount: 180, followers: 12300, following: 80, comments: [] },
+                { id: "user4", username: "artist_omar", displayName: "عمر الفنان", avatar: "https://source.unsplash.com/random/100x100?man,artist,painting", bio: "أرى العالم من خلال عدستي وفرشاتي. الفن هو حياتي.", postsCount: 310, followers: 8750, following: 220, comments: [] },
+                { id: "user5", username: "sara_reads", displayName: "سارة القارئة", avatar: "https://source.unsplash.com/random/100x100?woman,book,library", bio: "أعشق الكتب والقراءة. أشارك مراجعاتي وتوصياتي.", postsCount: 95, followers: 3100, following: 120, comments: [] }
+            ];
+            let mockPosts = [ 
+                { id:1, type: 'image', userId: "user2", caption: "غروب الشمس الساحر من جبال الأنديز. لا شيء يضاهي هذا الجمال! 🌅 #طبيعة #سفر #مغامرة", textOverlay: "الأنديز 2025", likes: 1850, commentsCount: 78, mediaUrl: "https://source.unsplash.com/random/600x800?andes,sunset", postComments: [{user: "نور", text: "منظر يخطف الأنفاس!"}, {user:"أحمد", text:"أتمنى زيارة هذا المكان يوماً ما."}] },
+                { id:2, type: 'video', userId: "user3", caption: "مقتطفات من ورشة عمل صناعة الحلويات الشرقية. استمتعوا! 🍰🍯 #حلويات_شرقية #طبخ #فن", textOverlay: "ورشة الحلويات", likes: 1120, commentsCount: 130, mediaUrl: "https://dummyjson.com/video/1", postComments: [{user: "سارة", text: "تبدو لذيذة جداً!"}] }, 
+                { id:3, type: 'image', userId: "currentUser", caption: "قهوتي الصباحية وإطلالة على المدينة. بداية يوم مثالية! ☕️🏙️ #صباح_الخير #قهوة #هدوء", textOverlay: "صباح الخير Zowar", likes: 950, commentsCount: 45, mediaUrl: "https://source.unsplash.com/random/600x800?coffee,city,morning", postComments: [] },
+            ];
+            const mockChats = [
+                { id: 1, userId: "user2", lastMessage: "بالتأكيد، الفكرة تبدو رائعة!", unread: 2, online: true },
+                { id: 2, userId: "user3", lastMessage: "هل جربت الوصفة الجديدة؟", unread: 1, online: true },
+            ];
+
+
+            // --- Initial Setup ---
+            auth.signInAnonymously() 
+                .then(() => {
+                    console.log("User signed in anonymously (mock)");
+                })
+                .catch((error) => {
+                    console.error("Anonymous sign-in failed (mock):", error);
+                });
+
+            setTimeout(() => { splashScreen.classList.add('hidden'); }, 2800);
+            setActiveSection('home-section'); 
+            loadPreferences();
+            initializeSounds();
+            populateCurrentUserProfile(); 
+            updateUnreadMessagesBadge();
+            populateStories(); 
+            populateZowarSpaces(); 
+            populateGeoRooms(); 
+            populateActiveUsersInMessages();
+            updateTutoringRoleToggleVisuals(); 
+
+            // --- UI Population & Event Listeners ---
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    playUiClickSound();
+                    const sectionId = item.dataset.section;
+                    setActiveSection(sectionId); 
+                    if (sectionId === 'profile-section' && item.dataset.userId === 'currentUser') {
+                        populateCurrentUserProfile();
+                    }
+                });
+            });
+            if(triggerCreatePostBtn) { 
+                triggerCreatePostBtn.addEventListener('click', () => {
+                    playUiClickSound();
+                    setActiveSection('create-post-section', true); 
+                });
+            }
+            
+            messagesHeaderBtn.addEventListener('click', () => {
+                playUiClickSound();
+                setActiveSection(null); 
+                messagesView.classList.add('active');
+                chatListView.style.display = 'block'; 
+                chatView.style.display = 'none'; 
+                unreadMessagesCount = 0; 
+                updateUnreadMessagesBadge();
+            });
+            
+            if(backToMainFromMessagesBtn) { 
+                backToMainFromMessagesBtn.addEventListener('click', () => {
+                    playUiClickSound();
+                    messagesView.classList.remove('active');
+                    setActiveSection('home-section'); 
+                });
+            }
+
+            // --- Sound Initialization & Playback ---
+            function initializeSounds() {
+                try {
+                    uiClickSynth = new Tone.PluckSynth({ volume: masterVolume + 8, attackNoise: 0.05, dampening: 5000, resonance: 0.01 }).toDestination(); 
+                    notificationSynth = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 0.12, sustain: 0.05, release: 0.3 }, volume: masterVolume - 2 }).toDestination(); 
+                    messageSendSynth = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.005, decay: 0.08, sustain: 0.01, release: 0.1 }, volume: masterVolume + 2 }).toDestination(); 
+                    postSentSynth = new Tone.Synth({ oscillator: {type: "amsine", harmonicity: 1.2 }, envelope: { attack: 0.02, decay: 0.25, sustain: 0.05, release: 0.35 }, volume: masterVolume -1 }).toDestination(); 
+                    gameSelectSynth = new Tone.Synth({ oscillator: {type: "pulse", width: 0.6}, envelope: { attack: 0.01, decay: 0.1, sustain:0.05, release: 0.2}, volume: masterVolume }).toDestination();
+                    diceRollSynth = new Tone.NoiseSynth({ noise: { type: "pink" }, envelope: { attack: 0.005, decay: 0.15, sustain: 0 }, volume: masterVolume -5 }).toDestination();
+                    basketballShootSynth = new Tone.Synth({ oscillator: {type: "sawtooth"}, envelope: {attack:0.01, decay:0.1, sustain:0.05, release:0.1}, volume: masterVolume -3}).toDestination(); 
+                    quizCorrectSynth = new Tone.Synth({ oscillator: {type: "triangle"}, envelope: {attack:0.01, decay:0.1, sustain:0.1, release:0.1}, volume: masterVolume }).toDestination(); 
+                    quizWrongSynth = new Tone.Synth({ oscillator: {type: "square"}, envelope: {attack:0.01, decay:0.2, sustain:0, release:0.1}, volume: masterVolume -3 }).toDestination(); 
+
+
+                    callRingingSynth = new Tone.Loop(time => { 
+                        new Tone.Synth({ oscillator: { type: "pulse", width: 0.35 }, envelope: { attack: 0.01, decay: 0.28, sustain: 0, release: 0.1 }, volume: masterVolume - 3 }).toDestination().triggerAttackRelease("B5", "8n", time);
+                        new Tone.Synth({ oscillator: { type: "pulse", width: 0.35 }, envelope: { attack: 0.01, decay: 0.28, sustain: 0, release: 0.1 }, volume: masterVolume - 3 }).toDestination().triggerAttackRelease("F#5", "8n", time + 0.35);
+                    }, "1.25s");
+                    callingProgressSynth = new Tone.Loop(time => {
+                         new Tone.Synth({ oscillator: { type: "pwm", modulationFrequency: 0.35 }, envelope: { attack: 0.025, decay: 0.65, sustain: 0, release: 0.1 }, volume: masterVolume - 5 }).toDestination().triggerAttackRelease("G#4", "1n", time);
+                    }, "1.9s");
+                    Tone.Transport.start();
+                } catch (err) { console.warn("Tone.js synths could not be initialized.", err); }
+            }
+            function playSound(synth, note, duration) { 
+                if (!soundsEnabled) return; 
+                if (synth && Tone.context.state === 'running') {
+                    try { synth.triggerAttackRelease(note, duration); } catch (e) { console.warn("Sound play failed", e); }
+                } else if (synth && Tone.context.state !== 'running') {
+                    Tone.start().then(() => { if (synth) synth.triggerAttackRelease(note, duration); }).catch(e => console.warn("Tone.start() failed", e));
+                }
+            }
+            function playUiClickSound() { playSound(uiClickSynth, "E6", "100n"); } 
+            function playNotificationSound() { playSound(notificationSynth, "G6", "12n"); } 
+            function playMessageSendSound() { playSound(messageSendSynth, "B5", "50n"); }
+            function playPostSentSound() { playSound(postSentSynth, "D5", "6n"); }
+            function playGameSelectSound() { playSound(gameSelectSynth, "F#4", "16n"); }
+            function playDiceRollSound() { if (soundsEnabled && diceRollSynth && Tone.context.state === 'running') diceRollSynth.triggerAttackRelease("0.15"); else if (soundsEnabled && diceRollSynth) Tone.start().then(()=>diceRollSynth.triggerAttackRelease("0.15")); }
+            function playBasketballShootSound() { playSound(basketballShootSynth, "C4", "8n"); setTimeout(() => playSound(basketballShootSynth, "G3", "8n"), 80); } 
+            function playQuizCorrectSound() { playSound(quizCorrectSynth, "C5", "16n"); setTimeout(()=> playSound(quizCorrectSynth, "E5", "16n"),100); setTimeout(()=> playSound(quizCorrectSynth, "G5", "16n"),200);}
+            function playQuizWrongSound() { playSound(quizWrongSynth, "C3", "4n");}
+
+            function startCallRingingSound() { if (soundsEnabled && callRingingSynth && Tone.context.state === 'running') callRingingSynth.start(0); else if (soundsEnabled && callRingingSynth) Tone.start().then(()=>callRingingSynth.start(0));}
+            function stopCallRingingSound() { if (callRingingSynth) callRingingSynth.stop(0); }
+            function startCallingProgressSound() { if (soundsEnabled && callingProgressSynth && Tone.context.state === 'running') callingProgressSynth.start(0); else if(soundsEnabled && callingProgressSynth) Tone.start().then(()=>callingProgressSynth.start(0));}
+            function stopCallingProgressSound() { if (callingProgressSynth) callingProgressSynth.stop(0); }
+            document.body.addEventListener('click', () => {
+                if (Tone.context.state !== 'running') { Tone.start().catch(e => console.warn("Tone.start() on body click failed", e)); }
+            }, { once: true });
+
+            // --- Preferences (Dark Mode, Sound, Tutoring Role) ---
+            function loadPreferences() {
+                // Dark Mode
+                if (localStorage.getItem('darkModeZowar') === 'true' || (!localStorage.getItem('darkModeZowar') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) { 
+                    document.body.classList.add('dark-mode');
+                    if (darkModeToggleBtn) { 
+                        const span = darkModeToggleBtn.querySelector('span');
+                        if (span) span.style.transform = 'translateX(1.75rem)';
+                    }
+                }
+                // Sound Toggle
+                const savedSoundPref = localStorage.getItem('soundsEnabledZowar');
+                soundsEnabled = savedSoundPref !== null ? JSON.parse(savedSoundPref) : true;
+                if (soundToggleSpan) {
+                    soundToggleSpan.style.transform = soundsEnabled ? 'translateX(1.75rem)' : 'translateX(0px)';
+                    if (soundToggleBtn) {
+                         soundToggleBtn.classList.toggle('bg-[var(--accent-secondary-global)]', soundsEnabled);
+                         soundToggleBtn.classList.toggle('dark:bg-[var(--dark-accent-secondary-global)]', soundsEnabled && document.body.classList.contains('dark-mode'));
+                         soundToggleBtn.classList.toggle('bg-gray-300', !soundsEnabled);
+                         soundToggleBtn.classList.toggle('dark:bg-gray-600', !soundsEnabled && document.body.classList.contains('dark-mode'));
+                    }
+                }
+                // Tutoring Role
+                currentTutoringRole = localStorage.getItem('tutoringRoleZowar') || 'student';
+                updateTutoringRoleToggleVisuals();
+                if (tutoringRoleSelection) { 
+                     if (currentTutoringRole === 'teacher') {
+                        tutoringRoleSelection.style.display = 'none';
+                        tutoringTeacherView.style.display = 'block';
+                    } else {
+                        tutoringRoleSelection.style.display = 'none';
+                        tutoringStudentView.style.display = 'block';
+                    }
+                }
+            }
+
+            darkModeToggleBtn.addEventListener('click', () => {
+                playUiClickSound();
+                document.body.classList.toggle('dark-mode');
+                const span = darkModeToggleBtn.querySelector('span');
+                if (span) {
+                    span.style.transform = document.body.classList.contains('dark-mode') ? 'translateX(1.75rem)' : 'translateX(0px)';
+                }
+                localStorage.setItem('darkModeZowar', document.body.classList.contains('dark-mode'));
+                const activeSection = document.querySelector('.section.active, .view.active');
+                if (activeSection) setActiveSection(activeSection.id); 
+            });
+
+            if (soundToggleBtn) {
+                soundToggleBtn.addEventListener('click', () => {
+                    soundsEnabled = !soundsEnabled;
+                    if (soundToggleSpan) soundToggleSpan.style.transform = soundsEnabled ? 'translateX(1.75rem)' : 'translateX(0px)';
+                    soundToggleBtn.classList.toggle('bg-[var(--accent-secondary-global)]', soundsEnabled);
+                    soundToggleBtn.classList.toggle('dark:bg-[var(--dark-accent-secondary-global)]', soundsEnabled && document.body.classList.contains('dark-mode'));
+                    soundToggleBtn.classList.toggle('bg-gray-300', !soundsEnabled);
+                    soundToggleBtn.classList.toggle('dark:bg-gray-600', !soundsEnabled && document.body.classList.contains('dark-mode'));
+                    localStorage.setItem('soundsEnabledZowar', soundsEnabled);
+                    playUiClickSound(); 
+                    showAlert(soundsEnabled ? "تم تفعيل الأصوات" : "تم إيقاف الأصوات", "info");
+                });
+            }
+
+            function updateTutoringRoleToggleVisuals() {
+                const studentBtnSettings = getEl('role-student-settings-btn');
+                const teacherBtnSettings = getEl('role-teacher-settings-btn');
+                const studentBtnMain = getEl('iam-student-btn');
+                const teacherBtnMain = getEl('iam-teacher-btn');
+
+                if (currentTutoringRole === 'teacher') {
+                    teacherBtnMain?.classList.add('active-role'); studentBtnMain?.classList.remove('active-role');
+                    teacherBtnSettings?.classList.add('active-role'); studentBtnSettings?.classList.remove('active-role');
+                } else {
+                    studentBtnMain?.classList.add('active-role'); teacherBtnMain?.classList.remove('active-role');
+                    studentBtnSettings?.classList.add('active-role'); teacherBtnSettings?.classList.remove('active-role');
+                }
+            }
+
+
+            function setTutoringRole(role) {
+                playUiClickSound();
+                currentTutoringRole = role;
+                localStorage.setItem('tutoringRoleZowar', role);
+                updateTutoringRoleToggleVisuals();
+                if (tutoringRoleSelection) tutoringRoleSelection.style.display = 'none';
+                if (tutoringStudentView) tutoringStudentView.style.display = role === 'student' ? 'block' : 'none';
+                if (tutoringTeacherView) tutoringTeacherView.style.display = role === 'teacher' ? 'block' : 'none';
+                if (tutoringSubjectDetails) tutoringSubjectDetails.style.display = 'none';
+                if (teacherPublishLessonArea) teacherPublishLessonArea.style.display = 'none';
+
+            }
+            if(iamStudentBtn) iamStudentBtn.addEventListener('click', () => setTutoringRole('student'));
+            if(iamTeacherBtn) iamTeacherBtn.addEventListener('click', () => setTutoringRole('teacher'));
+            if(roleStudentSettingsBtn) roleStudentSettingsBtn.addEventListener('click', () => setTutoringRole('student'));
+            if(roleTeacherSettingsBtn) roleTeacherSettingsBtn.addEventListener('click', () => setTutoringRole('teacher'));
+
+
+            // --- Alert Banner ---
+            function showAlert(message, type = 'info') { 
+                alertMessage.textContent = message;
+                alertBanner.className = 'alert-banner'; 
+                if (type === 'success') alertBanner.style.backgroundColor = 'var(--accent-secondary-global)';
+                else if (type === 'error') alertBanner.style.backgroundColor = 'var(--danger-color-global)';
+                else alertBanner.style.backgroundColor = 'var(--accent-primary-global)'; 
+
+                alertBanner.classList.add('show');
+                setTimeout(() => {
+                    alertBanner.classList.remove('show');
+                }, 3000);
+            }
+            
+            // --- Stories ---
+            function populateStories() {
+                if (!storiesContainer) return;
+                storiesContainer.innerHTML = ''; 
+                mockUsers.slice(0,5).forEach((user, index) => {
+                    const storyEl = document.createElement('div');
+                    storyEl.className = 'story-circle flex-shrink-0';
+                    storyEl.innerHTML = `<img src="${user.avatar}" alt="Story by ${user.displayName}">`;
+                    storiesContainer.appendChild(storyEl);
+                });
+                const addStoryEl = document.createElement('div');
+                addStoryEl.className = 'story-circle flex-shrink-0 flex items-center justify-center border-dashed border-gray-400 dark:border-gray-600';
+                addStoryEl.style.borderImage = 'none';
+                addStoryEl.innerHTML = `<span class="text-3xl text-gray-400 dark:text-gray-500">+</span>`;
+                storiesContainer.appendChild(addStoryEl);
+            }
+            
+            // --- Zowar Spaces & Geo Rooms (Explore Section) ---
+            function populateZowarSpaces() {
+                if (!zowarSpacesContainer) return;
+                zowarSpacesContainer.innerHTML = ''; 
+
+                const mockSpaces = [
+                    { title: "نقاشات حول مستقبل الذكاء الاصطناعي 🤖", host: "د. خالد", listeners: 78, live: true, avatars: ["https://source.unsplash.com/random/24x24?man,tech", "https://source.unsplash.com/random/24x24?woman,scientist", "https://source.unsplash.com/random/24x24?person,glasses"] },
+                    { title: "أمسية شعرية مع نجوم الكلمة 📜", host: "أمل الشاعرة", listeners: 120, live: true, avatars: ["https://source.unsplash.com/random/24x24?woman,poet", "https://source.unsplash.com/random/24x24?man,book", "https://source.unsplash.com/random/24x24?person,elegant"] }
+                ];
+                mockSpaces.forEach(space => {
+                    const spaceEl = document.createElement('div');
+                    spaceEl.className = 'zowar-space-card';
+                    let avatarHTML = space.avatars.map((avatar, idx) => `<img src="${avatar}" class="w-6 h-6 rounded-full border-2 border-white/50 ${idx > 0 ? '-mr-2 rtl:-ml-2 rtl:mr-0' : ''}">`).join('');
+                    spaceEl.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-md mb-1">${space.title}</h4>
+                                <p class="text-xs opacity-80">مع <span class="font-semibold">${space.host}</span></p>
+                            </div>
+                            ${space.live ? '<span class="text-xs bg-red-500 px-2.5 py-1 rounded-full font-semibold shadow">مباشر</span>' : ''}
+                        </div>
+                        <div class="mt-3 flex items-center space-x-2 rtl:space-x-reverse">
+                            ${avatarHTML}
+                            <span class="text-xs opacity-70">+ ${space.listeners} مستمع</span>
+                        </div>`;
+                    zowarSpacesContainer.appendChild(spaceEl);
+                });
+                const startSpaceBtn = document.createElement('button');
+                startSpaceBtn.className = 'btn btn-secondary w-full mt-3 text-sm';
+                startSpaceBtn.innerHTML = '🎤 ابدأ غرفة صوتية';
+                zowarSpacesContainer.appendChild(startSpaceBtn);
+            }
+
+            function populateGeoRooms() {
+                if(!geoRoomsGrid) return;
+                geoRoomsGrid.innerHTML = ''; 
+
+                const mockGeoRooms = [
+                    { name: "مجتمع أهل الحي 🏡", members: 23, gradient: "from-[var(--accent-primary-global)] to-[#1E40AF]" },
+                    { name: "عشاق القهوة ☕", members: 45, gradient: "from-[var(--accent-secondary-global)] to-[#2A8588]" },
+                ];
+                mockGeoRooms.forEach(room => {
+                    const roomEl = document.createElement('div');
+                    roomEl.className = `p-5 rounded-xl text-white shadow-xl bg-gradient-to-br ${room.gradient} transition-transform hover:scale-[1.02] cursor-pointer`;
+                    roomEl.innerHTML = `
+                        <h3 class="font-bold text-md mb-1">${room.name}</h3>
+                        <p class="text-xs opacity-80">${room.members} عضو نشط الآن</p>`;
+                    geoRoomsGrid.appendChild(roomEl);
+                });
+            }
+            
+            // --- Posts Feed ---
+            function populatePostsFeed() {
+                postsFeed.innerHTML = ''; 
+                mockPosts.slice().reverse().forEach(postData => { 
+                    const user = mockUsers.find(u => u.id === postData.userId) || {username: "مستخدم غير معروف", displayName: "مستخدم غير معروف", avatar: "https://placehold.co/40x40/cccccc/FFFFFF?text=?"};
+                    const postElement = document.createElement('div');
+                    postElement.className = 'post-card';
+                    postElement.dataset.postId = postData.id;
+                    postElement.innerHTML = `
+                        <div class="p-3 flex items-center space-x-3 rtl:space-x-reverse">
+                            <img src="${user.avatar}" class="w-10 h-10 rounded-full">
+                            <div>
+                                <p class="font-semibold text-sm text-gray-800 dark:text-gray-200">${user.displayName}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">@${user.username}</p>
+                            </div>
+                        </div>
+                        <div class="post-media-container">
+                            ${postData.type === 'image' ? `<img src="${postData.mediaUrl}" alt="Post media">` : `<video src="${postData.mediaUrl}" controls class="w-full h-auto max-h-[60vh] object-contain"></video>`}
+                            ${postData.textOverlay ? `<div class="post-text-overlay">${postData.textOverlay}</div>` : ''}
+                        </div>
+                        <div class="p-3">
+                            <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-2">${postData.caption}</p>
+                            ${postData.hasAiHighlight ? '<button class="ai-highlight-btn text-xs bg-[var(--highlight-gold-global)] text-black px-2 py-0.5 rounded-md font-semibold hover:opacity-90">✨ ملخص AI</button>' : ''}
+                        </div>
+                        <div class="post-actions">
+                            <button class="like-btn">❤ <span class="text-xs ml-1">${postData.likes}</span></button>
+                            <button class="comment-btn" data-post-id="${postData.id}">💬 <span class="text-xs ml-1">${postData.commentsCount}</span></button>
+                            <button>➥</button>
+                        </div>
+                    `;
+                    postsFeed.appendChild(postElement);
+                });
+            }
+            postsFeed.addEventListener('click', (e) => {
+                if (e.target.closest('.ai-highlight-btn')) {
+                    playUiClickSound();
+                    document.getElementById('ai-summary-text').textContent = "هذا المنشور يعرض لقطات مذهلة، مع التركيز على التفاصيل الدقيقة. ينصح به للمهتمين بالجودة البصرية!";
+                    aiHighlightModal.classList.add('active');
+                }
+                const likeBtn = e.target.closest('.like-btn');
+                if (likeBtn) {
+                    playUiClickSound();
+                    likeBtn.classList.toggle('liked');
+                }
+                const commentBtn = e.target.closest('.comment-btn');
+                if (commentBtn) {
+                    playUiClickSound();
+                    currentOpenPostIdForComment = commentBtn.dataset.postId;
+                    populatePostComments(currentOpenPostIdForComment);
+                    postCommentsModal.classList.add('active');
+                }
+            });
+            if(closeAiHighlightModalBtn) closeAiHighlightModalBtn.addEventListener('click', () => { playUiClickSound(); aiHighlightModal.classList.remove('active'); });
+
+            // --- Post Comments Modal ---
+            function populatePostComments(postId) {
+                postCommentsList.innerHTML = '';
+                const post = mockPosts.find(p => p.id == postId);
+                if (post && post.postComments) {
+                    post.postComments.forEach(comment => {
+                        const commentDiv = document.createElement('div');
+                        commentDiv.className = 'comment-item flex items-start space-x-2 rtl:space-x-reverse';
+                        const commenter = mockUsers.find(u => u.displayName === comment.user) || { avatar: "https://placehold.co/32x32/cccccc/FFFFFF?text=?" };
+                        commentDiv.innerHTML = `
+                            <img src="${commenter.avatar}" class="w-8 h-8 rounded-full mt-1">
+                            <div>
+                                <span class="font-semibold text-sm text-gray-800 dark:text-gray-200">${comment.user}</span>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">${comment.text}</p>
+                            </div>`;
+                        postCommentsList.appendChild(commentDiv);
+                    });
+                }
+                if (postCommentsList.innerHTML === '') {
+                    postCommentsList.innerHTML = '<p class="text-sm text-center text-gray-500 dark:text-gray-400">لا توجد تعليقات بعد. كن أول من يعلق!</p>';
+                }
+            }
+            submitPostCommentBtn.addEventListener('click', () => {
+                const commentText = newPostCommentInput.value.trim();
+                if (commentText && currentOpenPostIdForComment) {
+                    playMessageSendSound();
+                    const post = mockPosts.find(p => p.id == currentOpenPostIdForComment);
+                    const currentUser = mockUsers.find(u => u.id === "currentUser");
+                    if (post && currentUser) {
+                        post.postComments.push({ user: currentUser.displayName, text: commentText });
+                        post.commentsCount++; 
+                        populatePostComments(currentOpenPostIdForComment); 
+                        const postCardCommentBtn = postsFeed.querySelector(`.post-card[data-post-id="${currentOpenPostIdForComment}"] .comment-btn span`);
+                        if (postCardCommentBtn) postCardCommentBtn.textContent = post.commentsCount;
+                        currentUser.comments.push({postId: currentOpenPostIdForComment, text: commentText});
+                    }
+                    newPostCommentInput.value = '';
+                }
+            });
+            if(closePostCommentsModalBtn) closePostCommentsModalBtn.addEventListener('click', () => { playUiClickSound(); postCommentsModal.classList.remove('active'); });
+
+            // --- Create Post Modal ---
+            if(nextToTextOverlayBtn) nextToTextOverlayBtn.addEventListener('click', () => {
+                playUiClickSound();
+                const file = mediaUploadInput.files[0];
+                if (file) {
+                    uploadedMediaFile = file; 
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        if (file.type.startsWith('image/')) {
+                            postPreviewImage.src = e.target.result;
+                            postPreviewImage.style.display = 'block';
+                            postPreviewVideo.style.display = 'none';
+                        } else if (file.type.startsWith('video/')) {
+                            postPreviewVideo.src = e.target.result;
+                            postPreviewVideo.style.display = 'block';
+                            postPreviewImage.style.display = 'none';
+                        }
+                        postPreviewPlaceholder.style.display = 'none';
+                    }
+                    reader.readAsDataURL(file);
+                    createPostStep1.style.display = 'none';
+                    createPostStep2.style.display = 'block';
+                } else {
+                    showAlert("الرجاء اختيار ملف صورة أو فيديو أولاً.", "error");
+                }
+            });
+            if(backToMediaUploadBtn) backToMediaUploadBtn.addEventListener('click', () => {
+                playUiClickSound();
+                createPostStep2.style.display = 'none';
+                createPostStep1.style.display = 'block';
+                previewTextOverlay.style.display = 'none'; 
+            });
+            if(postTextInput) postTextInput.addEventListener('input', (e) => {
+                const text = e.target.value;
+                if (text.trim() !== '') {
+                    previewTextOverlay.textContent = text;
+                    previewTextOverlay.style.display = 'block';
+                } else {
+                    previewTextOverlay.style.display = 'none';
+                }
+            });
+            if(generateCaptionBtn) generateCaptionBtn.addEventListener('click', async () => {
+                playUiClickSound();
+                captionLoadingSpinner.style.display = 'block';
+                generateCaptionBtn.disabled = true;
+                const mediaType = uploadedMediaFile ? (uploadedMediaFile.type.startsWith('image/') ? 'صورة' : 'فيديو') : 'محتوى';
+                const overlayText = postTextInput.value.trim();
+                let prompt = `اقترح تعليقًا جذابًا لمنشور على وسائل التواصل الاجتماعي. نوع الوسائط هو ${mediaType}.`;
+                if (overlayText) {
+                    prompt += ` النص المتراكب على الوسائط هو: "${overlayText}".`;
+                }
+                prompt += " اجعل التعليق قصيرًا وملهمًا ومناسبًا للثقافة العربية، وأضف بعض الهاشتاغات المناسبة.";
+
+                try {
+                    const caption = await callGeminiForText(prompt);
+                    postCaptionInput.value = caption;
+                } catch (error) {
+                    showAlert("فشل اقتراح التعليق. حاول مرة أخرى.", "error");
+                } finally {
+                    captionLoadingSpinner.style.display = 'none';
+                    generateCaptionBtn.disabled = false;
+                }
+            });
+            if(submitPostBtn) submitPostBtn.addEventListener('click', () => {
+                const caption = postCaptionInput.value.trim();
+                const textOverlay = postTextInput.value.trim();
+                const currentUser = mockUsers.find(u => u.id === "currentUser");
+
+                if (!uploadedMediaFile) { showAlert("لم يتم اختيار وسائط للنشر!", "error"); return; }
+                if (!caption) { showAlert("الرجاء كتابة تعليق للمنشور.", "error"); return; }
+
+                const newPost = {
+                    id: mockPosts.length + 1, 
+                    type: uploadedMediaFile.type.startsWith('image/') ? 'image' : 'video',
+                    userId: currentUser.id,
+                    caption: caption,
+                    textOverlay: textOverlay || null,
+                    likes: 0,
+                    commentsCount: 0,
+                    mediaUrl: URL.createObjectURL(uploadedMediaFile), 
+                    postComments: []
+                };
+                mockPosts.push(newPost);
+                currentUser.postsCount++;
+                
+                playPostSentSound();
+                showAlert("تم نشر منشورك بنجاح!", "success");
+                populatePostsFeed(); 
+                populateCurrentUserProfile(); 
+                
+                createPostStep2.style.display = 'none';
+                createPostStep1.style.display = 'block';
+                mediaUploadInput.value = '';
+                postTextInput.value = '';
+                postCaptionInput.value = '';
+                postPreviewImage.style.display = 'none'; postPreviewImage.src = "#";
+                postPreviewVideo.style.display = 'none'; postPreviewVideo.src = "";
+                previewTextOverlay.style.display = 'none';
+                postPreviewPlaceholder.style.display = 'block';
+                uploadedMediaFile = null;
+                
+                setActiveSection('home-section'); 
+            });
+
+
+            // --- Chat & Messages ---
+            function updateUnreadMessagesBadge() {
+                if (unreadMessagesCount > 0) {
+                    unreadMessagesBadge.textContent = unreadMessagesCount;
+                    unreadMessagesBadge.style.display = 'flex';
+                } else {
+                    unreadMessagesBadge.style.display = 'none';
+                }
+            }
+             function populateActiveUsersInMessages() {
+                if (!activeUsersMessagesContainer) return;
+                activeUsersMessagesContainer.innerHTML = '';
+                mockUsers.filter(u => u.id !== "currentUser" && mockChats.some(c => c.userId === u.id && c.online)).slice(0, 5)
+                    .forEach(user => {
+                        const userEl = document.createElement('div');
+                        userEl.className = 'active-user-avatar text-center flex-shrink-0 w-16';
+                        userEl.innerHTML = `
+                            <img src="${user.avatar}" alt="${user.displayName}" class="mx-auto story-circle border-[var(--accent-secondary-global)]">
+                            <p class="text-xs mt-1.5 text-gray-600 dark:text-gray-400 truncate">${user.displayName}</p>`;
+                        activeUsersMessagesContainer.appendChild(userEl);
+                    });
+            }
+            function populateChatList() {
+                if(!chatListItems) return;
+                chatListItems.innerHTML = '';
+                mockChats.forEach(chatData => {
+                    const user = mockUsers.find(u => u.id === chatData.userId) || {username: "مستخدم محذوف", displayName: "مستخدم محذوف", avatar: "https://placehold.co/50x50/cccccc/FFFFFF?text=X"};
+                    const chatItem = document.createElement('div');
+                    chatItem.className = 'p-4 flex items-center space-x-3 rtl:space-x-reverse hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer transition-colors';
+                    chatItem.dataset.chatId = chatData.id;
+                    chatItem.innerHTML = `
+                        <div class="relative">
+                            <img src="${user.avatar}" alt="${user.displayName}" class="w-12 h-12 rounded-full">
+                            ${chatData.online ? '<span class="absolute bottom-0 right-0 block w-3.5 h-3.5 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full ring-1 ring-green-300 dark:ring-green-500"></span>' : ''}
+                        </div>
+                        <div class="flex-grow overflow-hidden">
+                            <h3 class="font-semibold text-gray-800 dark:text-gray-200 truncate">${user.displayName}</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 truncate">${chatData.lastMessage}</p>
+                        </div>
+                        ${chatData.unread > 0 ? `<div class="bg-[var(--accent-primary-global)] text-white text-xs rounded-full px-2.5 py-1 font-semibold">${chatData.unread}</div>` : ''}
+                    `;
+                    chatItem.addEventListener('click', () => openChat(chatData, user));
+                    chatListItems.appendChild(chatItem);
+                });
+            }
+            async function openChat(chatData, userData) {
+                playUiClickSound();
+                getEl('chat-view-avatar').src = userData.avatar;
+                getEl('chat-view-name').textContent = userData.displayName;
+                getEl('chat-view-status').textContent = chatData.online ? "نشط الآن" : "غير متصل";
+                getEl('chat-view-status').className = `text-xs ${chatData.online ? 'text-green-500' : 'text-gray-500 dark:text-gray-400'}`;
+                
+                const messagesContainer = getEl('chat-messages');
+                messagesContainer.innerHTML = ''; 
+                addMessageToChat(`أهلاً ${userData.displayName}! كيف حالك؟`, false);
+                addMessageToChat("أنا بخير، ماذا عنك؟", true);
+                if(chatData.id === 1) addMessageToChat("هل يمكننا الحديث عن مشروع زوار؟", false);
+                
+                chatListView.style.display = 'none';
+                chatView.style.display = 'flex';
+                const lastReceivedMessage = messagesContainer.querySelectorAll('.chat-bubble.received:last-child')[0]?.textContent;
+                if (lastReceivedMessage) {
+                    await fetchSmartReplies(lastReceivedMessage);
+                } else {
+                    if(smartReplyContainer) smartReplyContainer.style.display = 'none';
+                }
+            }
+            if(backToChatListBtn) backToChatListBtn.addEventListener('click', () => { playUiClickSound(); chatView.style.display = 'none'; chatListView.style.display = 'block'; if(smartReplyContainer) smartReplyContainer.style.display = 'none'; });
+            if(sendMessageBtn) sendMessageBtn.addEventListener('click', async () => {
+                const messageText = messageInput.value.trim();
+                if (messageText) {
+                    addMessageToChat(messageText, true);
+                    playMessageSendSound();
+                    messageInput.value = '';
+                    if(smartReplyContainer) smartReplyContainer.style.display = 'none'; 
+                    
+                    const replyText = "جميل جداً! أتفق معك.";
+                    setTimeout(async () => { 
+                        addMessageToChat(replyText, false); 
+                        playNotificationSound(); 
+                        unreadMessagesCount++; 
+                        updateUnreadMessagesBadge();
+                        await fetchSmartReplies(replyText);
+                    }, 1500);
+                }
+            });
+            if(messageInput) messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessageBtn.click(); } });
+            if(voiceNoteBtn) voiceNoteBtn.addEventListener('click', () => {
+                playUiClickSound();
+                if (!isRecording) {
+                    isRecording = true;
+                    voiceRecordingIndicator.style.display = 'flex';
+                    voiceNoteBtn.innerHTML = '🛑'; 
+                    voiceRecordSeconds = 0;
+                    voiceTimer.textContent = '0:00';
+                    voiceRecordInterval = setInterval(() => {
+                        voiceRecordSeconds++;
+                        const minutes = Math.floor(voiceRecordSeconds / 60);
+                        const seconds = voiceRecordSeconds % 60;
+                        voiceTimer.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                    }, 1000);
+                } else {
+                    isRecording = false;
+                    voiceRecordingIndicator.style.display = 'none';
+                    voiceNoteBtn.innerHTML = '🎙️'; 
+                    clearInterval(voiceRecordInterval);
+                    addMessageToChat(`ملاحظة صوتية (${voiceTimer.textContent})`, true, true);
+                    playMessageSendSound(); 
+                }
+            });
+            function addMessageToChat(text, isSent, isVoiceNote = false) {
+                const messagesContainer = getEl('chat-messages');
+                const bubble = document.createElement('div');
+                if (isVoiceNote) {
+                    bubble.className = `chat-bubble sent voice-note-bubble`;
+                    bubble.innerHTML = `
+                        <div class="waveform"><span></span><span></span><span></span><span></span></div>
+                        <span>${text}</span>`;
+                } else {
+                    bubble.className = `chat-bubble ${isSent ? 'sent' : 'received'}`;
+                    bubble.textContent = text;
+                }
+                messagesContainer.appendChild(bubble);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+
+            // --- User Profiles & Search ---
+            function populateUserProfile(userId, containerElement) {
+                const user = mockUsers.find(u => u.id === userId);
+                 if (!user || !containerElement) { 
+                    if(containerElement) containerElement.innerHTML = '<p>لم يتم العثور على المستخدم.</p>'; 
+                    return; 
+                }
+
+
+                let profileHTML = `
+                    <div class="profile-header-bg" style="background: var(${document.body.classList.contains('dark-mode') ? '--dark-profile-accent' : '--profile-accent'});"></div>
+                    <div class="p-4 profile-avatar-container">
+                        <div class="text-center">
+                            <div class="relative inline-block profile-avatar">
+                                <img src="${user.avatar}" alt="Profile Picture">
+                                ${userId === "currentUser" ? '<span class="absolute bottom-1 right-1 block w-6 h-6 bg-green-400 border-2 border-white dark:border-gray-800 rounded-full ring-2 ring-green-300 dark:ring-green-500"></span>' : ''}
+                            </div>
+                            <h2 class="text-2xl font-extrabold text-gray-800 dark:text-gray-200 mt-3">${user.displayName}</h2>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">@${user.username}</p>
+                            <p id="user-bio-text-${userId}" class="text-sm text-gray-600 dark:text-gray-300 mt-3 max-w-md mx-auto px-4">${user.bio}</p>
+                            ${userId === "currentUser" ? '<button id="generate-bio-btn" class="mt-2 text-xs text-[var(--accent-secondary-global)] dark:text-[var(--dark-accent-secondary-global)] font-semibold hover:underline">✨ أنشئ نبذة (AI)</button><div id="bio-loading-spinner" class="mt-1 text-xs text-gray-500 dark:text-gray-400" style="display:none;">جاري إنشاء النبذة...</div>' : ''}
+                        </div>
+                        <div class="mt-6 grid grid-cols-3 gap-2 text-center p-4 bg-white dark:bg-gray-800/60 rounded-xl shadow-lg">
+                            <div><p class="text-lg font-bold text-gray-800 dark:text-gray-200">${user.postsCount}</p><p class="text-xs text-gray-500 dark:text-gray-400">منشور</p></div>
+                            <div><p class="text-lg font-bold text-gray-800 dark:text-gray-200">${user.followers}</p><p class="text-xs text-gray-500 dark:text-gray-400">متابع</p></div>
+                            <div><p class="text-lg font-bold text-gray-800 dark:text-gray-200">${user.following}</p><p class="text-xs text-gray-500 dark:text-gray-400">يتابع</p></div>
+                        </div>
+                        <div class="mt-6 space-y-3 px-2">`;
+
+                if (userId === "currentUser") {
+                    profileHTML += `
+                        <button id="edit-display-name-btn" class="w-full p-3.5 bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 hover:bg-gray-200 rounded-lg text-gray-700 dark:text-gray-200 font-semibold flex items-center justify-between text-sm transition-colors">
+                            <span>تعديل اسم العرض</span> <span class="transform -scale-x-100 text-gray-400 dark:text-gray-500">❮</span>
+                        </button>
+                        <button id="view-my-comments-btn" class="w-full p-3.5 bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 hover:bg-gray-200 rounded-lg text-gray-700 dark:text-gray-200 font-semibold flex items-center justify-between text-sm transition-colors">
+                            <span>عرض تعليقاتي اليومية</span> <span class="text-gray-400 dark:text-gray-500">📝</span>
+                        </button>
+                        <div id="my-daily-comments-list" class="mt-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg space-y-2" style="display:none;"></div>
+                        <button id="who-searched-me-btn" class="w-full p-3.5 bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 hover:bg-gray-200 rounded-lg text-gray-700 dark:text-gray-200 font-semibold flex items-center justify-between text-sm transition-colors">
+                            <span>من بحث عني؟</span> <span class="text-gray-400 dark:text-gray-500">👀</span>
+                        </button>
+                        <div id="who-searched-me-list" class="mt-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg space-y-2" style="display:none;"></div>
+                        <button id="settings-btn-profile" class="w-full p-3.5 bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 hover:bg-gray-200 rounded-lg text-gray-700 dark:text-gray-200 font-semibold flex items-center justify-between text-sm transition-colors">
+                            <span>الإعدادات والتفضيلات</span> <span class="text-gray-400 dark:text-gray-500">⚙</span>
+                        </button>
+                        <button class="w-full p-3.5 bg-red-50 dark:bg-red-900/40 dark:hover:bg-red-900/60 hover:bg-red-100 rounded-lg text-red-600 dark:text-red-400 font-semibold text-sm transition-colors">تسجيل الخروج</button>`;
+                } else {
+                     profileHTML += `
+                        <div class="flex space-x-2 rtl:space-x-reverse">
+                            <button class="w-full btn btn-primary text-sm">متابعة</button>
+                            <button class="w-full btn bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">مراسلة</button>
+                        </div>
+                        <button class="block-user-btn w-full btn btn-danger text-sm mt-2" data-user-id-to-block="${user.id}">حظر ${user.displayName}</button>`;
+                }
+                profileHTML += `</div></div>`; 
+                containerElement.innerHTML = profileHTML;
+
+                if (userId === "currentUser") {
+                    getEl('settings-btn-profile')?.addEventListener('click', () => { playUiClickSound(); settingsModal.classList.add('active'); });
+                    getEl('edit-display-name-btn')?.addEventListener('click', () => {
+                        playUiClickSound();
+                        showAlert("يمكن تغيير اسم العرض مرتين فقط كل 15 يومًا. (هذه محاكاة)", "info");
+                    });
+                    getEl('view-my-comments-btn')?.addEventListener('click', toggleMyDailyComments);
+                    getEl('generate-bio-btn')?.addEventListener('click', generateAiBio);
+                    getEl('who-searched-me-btn')?.addEventListener('click', toggleWhoSearchedMe);
+                } else {
+                    containerElement.querySelector('.block-user-btn')?.addEventListener('click', (e) => {
+                        playUiClickSound();
+                        const userIdToBlock = e.target.dataset.userIdToBlock;
+                        const userToBlock = mockUsers.find(u => u.id === userIdToBlock);
+                        showAlert(`تم حظر ${userToBlock.displayName} بنجاح. (محاكاة)`, 'success');
+                    });
+                }
+            }
+            function populateCurrentUserProfile() { populateUserProfile("currentUser", userProfileContent); }
+            function toggleMyDailyComments() {
+                playUiClickSound();
+                const commentsListDiv = getEl('my-daily-comments-list');
+                const currentUser = mockUsers.find(u => u.id === "currentUser");
+                if (commentsListDiv.style.display === 'none') {
+                    commentsListDiv.innerHTML = ''; 
+                    if (currentUser.comments && currentUser.comments.length > 0) {
+                        currentUser.comments.forEach(comment => {
+                             const post = mockPosts.find(p => p.id == comment.postId);
+                             const postOwner = mockUsers.find(u => u.id === post?.userId);
+                            const commentEl = document.createElement('div');
+                            commentEl.className = 'text-xs p-2.5 bg-white dark:bg-gray-800 rounded-md shadow-sm';
+                            commentEl.innerHTML = `علقت على منشور لـ <span class="font-semibold text-[var(--accent-secondary-global)]">${postOwner?.displayName || 'مستخدم'}</span>: <span class="italic">"${comment.text}"</span>`;
+                            commentsListDiv.appendChild(commentEl);
+                        });
+                    } else {
+                        commentsListDiv.innerHTML = '<p class="text-xs text-center text-gray-500 dark:text-gray-400 py-2">لا توجد تعليقات لعرضها.</p>';
+                    }
+                    commentsListDiv.style.display = 'block';
+                } else {
+                    commentsListDiv.style.display = 'none';
+                }
+            }
+             function toggleWhoSearchedMe() {
+                playUiClickSound();
+                const whoSearchedListDiv = getEl('who-searched-me-list');
+                if (whoSearchedListDiv.style.display === 'none') {
+                    whoSearchedListDiv.innerHTML = ''; 
+                    const searchers = mockUsers.filter(u => u.id !== "currentUser").slice(0, Math.floor(Math.random() * 3) + 1); 
+                    if (searchers.length > 0) {
+                        searchers.forEach(user => {
+                            const userEl = document.createElement('div');
+                            userEl.className = 'user-search-item p-2.5'; 
+                            userEl.innerHTML = `
+                                <img src="${user.avatar}" alt="${user.displayName}" class="w-8 h-8 rounded-full">
+                                <div>
+                                    <h4 class="font-semibold text-xs text-gray-800 dark:text-gray-200">${user.displayName}</h4>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">@${user.username}</p>
+                                </div>`;
+                            whoSearchedListDiv.appendChild(userEl);
+                        });
+                    } else {
+                        whoSearchedListDiv.innerHTML = '<p class="text-xs text-center text-gray-500 dark:text-gray-400 py-2">لا أحد بحث عنك مؤخرًا.</p>';
+                    }
+                    whoSearchedListDiv.style.display = 'block';
+                } else {
+                    whoSearchedListDiv.style.display = 'none';
+                }
+            }
+
+
+            openSearchModalBtn.addEventListener('click', () => { playUiClickSound(); searchModal.classList.add('active'); userSearchInput.focus(); });
+            closeSearchModalBtn.addEventListener('click', () => { playUiClickSound(); searchModal.classList.remove('active'); });
+            userSearchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                searchResultsContainer.innerHTML = '';
+                if (searchTerm.length < 1) { 
+                    searchResultsContainer.innerHTML = '<p class="text-sm text-center text-gray-500 dark:text-gray-400 py-4">اكتب للبحث عن مستخدمين...</p>';
+                    return;
+                }
+                const results = mockUsers.filter(user => user.id !== "currentUser" && (user.username.toLowerCase().includes(searchTerm) || user.displayName.toLowerCase().includes(searchTerm)));
+                if (results.length > 0) {
+                    results.forEach(user => {
+                        const resultDiv = document.createElement('div');
+                        resultDiv.className = 'user-search-item';
+                        resultDiv.dataset.userId = user.id;
+                        resultDiv.innerHTML = `
+                            <img src="${user.avatar}" alt="${user.displayName}">
+                            <div>
+                                <h4>${user.displayName}</h4>
+                                <p>@${user.username}</p>
+                            </div>`;
+                        resultDiv.addEventListener('click', () => {
+                            playUiClickSound();
+                            populateUserProfile(user.id, otherUserProfileContent);
+                            setActiveSection(null); 
+                            otherUserProfileView.classList.add('active');
+                            searchModal.classList.remove('active');
+                        });
+                        searchResultsContainer.appendChild(resultDiv);
+                    });
+                } else {
+                    searchResultsContainer.innerHTML = '<p class="text-sm text-center text-gray-500 dark:text-gray-400 py-4">لم يتم العثور على مستخدمين.</p>';
+                }
+            });
+            
+            // --- Settings Modal ---
+            if(closeSettingsModalBtn) closeSettingsModalBtn.addEventListener('click', () => { playUiClickSound(); settingsModal.classList.remove('active'); });
+
+            // --- Calling Screen ---
+            if(callBtn) callBtn.addEventListener('click', () => { 
+                playUiClickSound();
+                const currentChatName = getEl('chat-view-name').textContent;
+                const currentChatAvatar = getEl('chat-view-avatar').src;
+                getEl('calling-name').textContent = currentChatName;
+                getEl('calling-avatar').src = currentChatAvatar;
+                getEl('calling-status-text').textContent = "جاري الاتصال...";
+                callingScreen.style.display = 'flex';
+                startCallingProgressSound();
+                setTimeout(() => {
+                    if (callingScreen.style.display === 'flex') {
+                        getEl('calling-status-text').textContent = "يرن...";
+                        stopCallingProgressSound();
+                        startCallRingingSound();
+                    }
+                }, 3500); 
+                 setTimeout(() => { 
+                    if (callingScreen.style.display === 'flex') {
+                         endCallBtn.click(); 
+                    }
+                }, 9000); 
+             });
+            if(endCallBtn) endCallBtn.addEventListener('click', () => {
+                playUiClickSound();
+                callingScreen.style.display = 'none';
+                stopCallRingingSound();
+                stopCallingProgressSound();
+            });
+
+            // --- Gemini API Helper ---
+            async function callGeminiForText(promptText) {
+                let chatHistory = [{ role: "user", parts: [{ text: promptText }] }];
+                const payload = { contents: chatHistory };
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Gemini API Error:", errorData);
+                    throw new Error(`API Error: ${response.status}. ${errorData?.error?.message || 'Unknown error'}`);
+                }
+                const result = await response.json();
+                if (result.candidates && result.candidates[0]?.content?.parts?.[0]?.text) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    console.error("Unexpected Gemini API response structure:", result);
+                    throw new Error("لم يتم العثور على محتوى صالح في استجابة Gemini API.");
+                }
+            }
+            
+            // --- Gemini API Integrations ---
+            if(generateIcebreakersBtn) generateIcebreakersBtn.addEventListener('click', () => { playUiClickSound(); fetchIcebreakers(); });
+            async function fetchIcebreakers() { 
+                loadingGemini.style.display = 'block';
+                icebreakersSuggestionsDiv.innerHTML = '';
+                geminiErrorMessageEl.style.display = 'none';
+                generateIcebreakersBtn.disabled = true;
+                generateIcebreakersBtn.classList.add('opacity-70', 'cursor-not-allowed');
+                const prompt = "اقترح 3 أسئلة كسر جمود أو مواضيع نقاش شيقة ومبتكرة لمجموعة من الأشخاص في غرفة دردشة جغرافية يلتقون لأول مرة. يجب أن تكون الاقتراحات باللغة العربية، خفيفة، ممتعة، ومناسبة لثقافة عربية متنوعة. اجعلها تشجع على التفاعل الإيجابي.";
+                try {
+                    const suggestionsText = await callGeminiForText(prompt);
+                    const suggestionsArray = suggestionsText.split('\n').map(s => s.replace(/^\d+\.\s*/, '').trim()).filter(s => s);
+                    if (suggestionsArray.length > 0) {
+                        suggestionsArray.forEach(suggestion => {
+                            const p = document.createElement('p');
+                            p.className = 'gemini-suggestion-item';
+                            p.textContent = "💡 " + suggestion;
+                            icebreakersSuggestionsDiv.appendChild(p);
+                        });
+                    } else { icebreakersSuggestionsDiv.innerHTML = '<p class="text-slate-500 dark:text-slate-400">لم يتم العثور على اقتراحات.</p>'; }
+                } catch (error) {
+                    console.error('Error fetching icebreakers:', error);
+                    geminiErrorMessageEl.textContent = `حدث خطأ: ${error.message}.`;
+                    geminiErrorMessageEl.style.display = 'block';
+                } finally {
+                    loadingGemini.style.display = 'none';
+                    generateIcebreakersBtn.disabled = false;
+                    generateIcebreakersBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                }
+             }
+
+            async function fetchSmartReplies(lastMessage) {
+                if (!lastMessage || !smartReplyContainer) { if(smartReplyContainer) smartReplyContainer.style.display = 'none'; return; }
+                smartReplyContainer.innerHTML = '<p class="text-xs text-gray-400 dark:text-gray-500 py-1">✨ جاري توليد ردود ذكية...</p>';
+                smartReplyContainer.style.display = 'flex'; 
+
+                const prompt = `اقتراح 3 ردود قصيرة وذكية على الرسالة التالية في محادثة باللغة العربية: "${lastMessage}"`;
+                try {
+                    const repliesText = await callGeminiForText(prompt);
+                    const repliesArray = repliesText.split('\n').map(s => s.replace(/^\d+\.\s*/, '').trim()).filter(s => s && s.length < 30).slice(0,3); 
+                    smartReplyContainer.innerHTML = '';
+                    if (repliesArray.length > 0) {
+                        repliesArray.forEach(reply => {
+                            const btn = document.createElement('button');
+                            btn.className = 'smart-reply-btn';
+                            btn.textContent = reply;
+                            btn.onclick = () => {
+                                playUiClickSound();
+                                messageInput.value = reply;
+                                messageInput.focus();
+                                smartReplyContainer.style.display = 'none';
+                            };
+                            smartReplyContainer.appendChild(btn);
+                        });
+                    } else {
+                        smartReplyContainer.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error("Error fetching smart replies:", error);
+                    smartReplyContainer.style.display = 'none';
+                }
+            }
+            
+            async function generateAiBio() {
+                playUiClickSound();
+                const bioLoadingSpinner = getEl('bio-loading-spinner');
+                const generateBioBtn = getEl('generate-bio-btn');
+                const userBioText = getEl(`user-bio-text-currentUser`); 
+
+                if (bioLoadingSpinner) bioLoadingSpinner.style.display = 'block';
+                if (generateBioBtn) generateBioBtn.disabled = true;
+
+                const currentUser = mockUsers.find(u => u.id === "currentUser");
+                const prompt = `أنشئ نبذة شخصية (bio) جذابة ومختصرة لحساب على وسائل التواصل الاجتماعي لشخص اسمه "${currentUser.displayName}" واسم مستخدمه "@${currentUser.username}". اجعلها تعكس شخصية محبة للحياة ومشاركة للتجارب. باللغة العربية.`;
+                try {
+                    const newBio = await callGeminiForText(prompt);
+                    if (userBioText) userBioText.textContent = newBio;
+                    currentUser.bio = newBio; 
+                    showAlert("تم إنشاء نبذة شخصية جديدة!", "success");
+                } catch (error) {
+                    showAlert("فشل إنشاء النبذة. حاول مرة أخرى.", "error");
+                } finally {
+                    if (bioLoadingSpinner) bioLoadingSpinner.style.display = 'none';
+                    if (generateBioBtn) generateBioBtn.disabled = false;
+                }
+            }
+
+
+            // --- Find Nearby People ---
+            if(findNearbyPeopleCard) findNearbyPeopleCard.addEventListener('click', () => {
+                playUiClickSound();
+                nearbyPeopleResults.style.display = 'block';
+                nearbyUsersList.innerHTML = ''; 
+                const loadingIndicator = nearbyPeopleResults.querySelector('.loading-indicator');
+                const loadingText = nearbyPeopleResults.querySelector('p');
+                if (loadingIndicator) loadingIndicator.style.display = 'block';
+                if (loadingText) loadingText.style.display = 'block';
+
+                setTimeout(() => { 
+                    if (loadingIndicator) loadingIndicator.style.display = 'none';
+                    if (loadingText) loadingText.style.display = 'none';
+                    const nearbyMockUsers = mockUsers.filter(u => u.id !== "currentUser").slice(0, 3); 
+                    if (nearbyMockUsers.length > 0) {
+                        nearbyMockUsers.forEach((user, index) => {
+                            const distance = ["يبعد 300 متر", "في نفس الحي", "يبعد 1.2 كم"];
+                            const userCard = document.createElement('div');
+                            userCard.className = 'user-search-item p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md';
+                            userCard.dataset.userId = user.id;
+                            userCard.innerHTML = `
+                                <img src="${user.avatar}" alt="${user.displayName}" class="w-12 h-12 rounded-full">
+                                <div class="flex-grow">
+                                    <h4 class="font-semibold text-md text-gray-800 dark:text-gray-200">${user.displayName}</h4>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">@${user.username}</p>
+                                    <p class="text-xs text-[var(--accent-secondary-global)] dark:text-[var(--dark-accent-secondary-global)] mt-1">${distance[index % distance.length]}</p>
+                                </div>
+                                <button class="btn btn-secondary btn-sm p-2 text-xs">تواصل</button>`;
+                            userCard.addEventListener('click', (e) => {
+                                if (!e.target.closest('button')) { 
+                                    playUiClickSound();
+                                    populateUserProfile(user.id, otherUserProfileContent);
+                                    setActiveSection(null); 
+                                    otherUserProfileView.classList.add('active');
+                                }
+                            });
+                            nearbyUsersList.appendChild(userCard);
+                        });
+                    } else {
+                        nearbyUsersList.innerHTML = '<p class="text-sm text-center text-gray-500 dark:text-gray-400 py-4">لا يوجد مستخدمون قريبون حاليًا.</p>';
+                    }
+                }, 2000);
+            });
+            
+            // --- Games Section Logic ---
+            if(gamesSection) {
+                gamesSection.addEventListener('click', (e) => {
+                    const gameCard = e.target.closest('.game-card');
+                    if (gameCard) {
+                        playGameSelectSound();
+                        const gameType = gameCard.dataset.game;
+                        openGameLobby(gameType);
+                    }
+                });
+            }
+
+            if(backToGamesListBtn) {
+                backToGamesListBtn.addEventListener('click', () => {
+                    playUiClickSound();
+                    gameLobbyView.classList.remove('active');
+                    setActiveSection('games-section');
+                });
+            }
+
+            function openGameLobby(gameType) {
+                setActiveSection(null); 
+                gameLobbyView.classList.add('active');
+                let gameName = "";
+                let specificUIHTML = "";
+
+                switch(gameType) {
+                    case 'ludo':
+                        gameName = "يلا لودو";
+                        specificUIHTML = `
+                            <p class="text-center text-sm text-gray-600 dark:text-gray-300 mb-4">استعد لمواجهة حماسية في لعبة اللودو الكلاسيكية!</p>
+                            <div class="dice-container">
+                                <div class="dice" id="ludo-dice">
+                                    <div class="dice-face face-1">1</div> <div class="dice-face face-2">2</div>
+                                    <div class="dice-face face-3">3</div> <div class="dice-face face-4">4</div>
+                                    <div class="dice-face face-5">5</div> <div class="dice-face face-6">6</div>
+                                </div>
+                            </div>
+                            <button id="roll-ludo-dice-btn" class="btn btn-primary w-full text-sm mt-2">🎲 ارمي النرد</button>`;
+                        break;
+                    case 'dominoes':
+                        gameName = "دومينو";
+                        specificUIHTML = `<p class="text-center text-sm text-gray-600 dark:text-gray-300 mb-4">هل أنت مستعد لتحدي الدومينو؟ رتب قطعك بذكاء!</p> <img src="https://placehold.co/300x150/8E44AD/FFFFFF?text=Dominoes+Table" class="mx-auto rounded-lg shadow-md">`;
+                        break;
+                    case 'snakes-ladders':
+                        gameName = "حية ودرج";
+                        specificUIHTML = `
+                            <p class="text-center text-sm text-gray-600 dark:text-gray-300 mb-4">الحظ هو صديقك في هذه اللعبة المثيرة! تجنب الثعابين واصعد السلالم.</p>
+                            <div class="dice-container">
+                                <div class="dice" id="snakes-dice">
+                                    <div class="dice-face face-1">1</div> <div class="dice-face face-2">2</div>
+                                    <div class="dice-face face-3">3</div> <div class="dice-face face-4">4</div>
+                                    <div class="dice-face face-5">5</div> <div class="dice-face face-6">6</div>
+                                </div>
+                            </div>
+                            <button id="roll-snakes-dice-btn" class="btn btn-primary w-full text-sm mt-2">🐍 ارمي النرد</button>`;
+                        break;
+                    case 'basketball':
+                        gameName = "رميات السلة";
+                        specificUIHTML = `
+                            <p class="text-center text-sm text-gray-600 dark:text-gray-300 mb-4">اختبر دقتك! هل يمكنك تسجيل ثلاثية؟</p>
+                            <div class="basketball-court">
+                                <div class="hoop"></div>
+                                <div class="net"></div>
+                                <div class="ball" id="basketball-ball"></div>
+                            </div>
+                            <button id="shoot-basketball-btn" class="btn btn-primary w-full text-sm mt-4">🏀 ارمي الكرة</button>`;
+                        break;
+                    case 'quiz':
+                        gameName = "أسئلة عامة";
+                        specificUIHTML = `
+                            <p class="text-center text-sm text-gray-600 dark:text-gray-300 mb-4">تحدى معلوماتك وأجب على الأسئلة المتنوعة!</p>
+                            <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                <p id="quiz-question" class="font-semibold text-center mb-3">ما هي عاصمة فرنسا؟</p>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button class="quiz-option-btn btn bg-gray-200 dark:bg-gray-600 text-sm p-2">لندن</button>
+                                    <button class="quiz-option-btn btn bg-gray-200 dark:bg-gray-600 text-sm p-2 correct">باريس</button>
+                                    <button class="quiz-option-btn btn bg-gray-200 dark:bg-gray-600 text-sm p-2">برلين</button>
+                                    <button class="quiz-option-btn btn bg-gray-200 dark:bg-gray-600 text-sm p-2">مدريد</button>
+                                </div>
+                            </div>`;
+                        break;
+                    case 'challenges':
+                         gameName = "تحديات Zowar";
+                         specificUIHTML = `<p class="text-center text-sm text-gray-600 dark:text-gray-300 mb-4">أكمل التحديات اليومية والأسبوعية لكسب المكافآت!</p><img src="https://placehold.co/300x150/F0B90B/000000?text=Challenges" class="mx-auto rounded-lg shadow-md">`;
+                         break;
+                    default:
+                        gameName = "لعبة غير معروفة";
+                        specificUIHTML = "<p>تفاصيل اللعبة ستظهر هنا.</p>";
+                }
+                gameLobbyTitle.textContent = gameName;
+                gameSpecificUI.innerHTML = specificUIHTML;
+
+                if (gameType === 'ludo' && getEl('roll-ludo-dice-btn')) {
+                    getEl('roll-ludo-dice-btn').onclick = () => rollDice('ludo-dice');
+                }
+                if (gameType === 'snakes-ladders' && getEl('roll-snakes-dice-btn')) {
+                    getEl('roll-snakes-dice-btn').onclick = () => rollDice('snakes-dice');
+                }
+                if (gameType === 'basketball' && getEl('shoot-basketball-btn')) {
+                    getEl('shoot-basketball-btn').onclick = shootBasketball;
+                }
+                if (gameType === 'quiz') {
+                    querySelAll('.quiz-option-btn').forEach(btn => {
+                        btn.onclick = (e) => checkQuizAnswer(e.target);
+                    });
+                }
+                populateGameLobbyPlayers();
+            }
+            
+            function rollDice(diceId) {
+                playDiceRollSound();
+                const dice = getEl(diceId);
+                if (!dice) return;
+                const randomNumber = Math.floor(Math.random() * 6) + 1;
+                let xRand = (Math.floor(Math.random() * 4) + 1) * 90; 
+                let yRand = (Math.floor(Math.random() * 4) + 1) * 90;
+                dice.style.transform = `rotateX(${xRand}deg) rotateY(${yRand}deg)`;
+                setTimeout(() => {
+                    const faces = dice.querySelectorAll('.dice-face');
+                    faces.forEach(f => f.style.fontWeight = 'normal');
+                    const targetFace = dice.querySelector(`.face-${randomNumber}`);
+                    if(targetFace) targetFace.style.fontWeight = 'bold'; 
+                     showAlert(`لقد رميت ${randomNumber}!`, 'info');
+                }, 1000);
+            }
+
+            function shootBasketball() {
+                playBasketballShootSound();
+                const ball = getEl('basketball-ball');
+                if (!ball) return;
+                ball.classList.add('shooting');
+                setTimeout(() => {
+                    ball.classList.remove('shooting');
+                    const didScore = Math.random() > 0.4; 
+                    showAlert(didScore ? "رائع! لقد سجلت نقطة! 🏀" : "أوه! حاولت جيداً.", didScore ? 'success' : 'info');
+                }, 700);
+            }
+
+            function checkQuizAnswer(selectedButton) {
+                querySelAll('.quiz-option-btn').forEach(btn => btn.disabled = true); 
+                if (selectedButton.classList.contains('correct')) {
+                    playQuizCorrectSound();
+                    selectedButton.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+                    selectedButton.classList.add('bg-green-500', 'text-white');
+                    showAlert("إجابة صحيحة!", "success");
+                } else {
+                    playQuizWrongSound();
+                    selectedButton.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+                    selectedButton.classList.add('bg-red-500', 'text-white');
+                    showAlert("إجابة خاطئة. حاول مرة أخرى في السؤال التالي!", "error");
+                }
+            }
+
+            function populateGameLobbyPlayers() {
+                gameLobbyPlayers.innerHTML = '';
+                const currentUser = mockUsers.find(u => u.id === "currentUser");
+                const players = [currentUser, ...mockUsers.filter(u => u.id !== "currentUser").slice(0,3)]; 
+
+                players.forEach((player, index) => {
+                    const playerDiv = document.createElement('div');
+                    playerDiv.className = 'game-lobby-player text-gray-800 dark:text-gray-100'; 
+                    playerDiv.innerHTML = `
+                        <img src="${player.avatar}" alt="${player.displayName}">
+                        <span>${player.displayName} ${index === 0 ? '(أنت)' : ''}</span>
+                        ${index > 0 ? '<button class="text-xs text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-300 mr-auto rtl:ml-auto rtl:mr-0">إزالة</button>' : ''}`;
+                    gameLobbyPlayers.appendChild(playerDiv);
+                });
+            }
+
+             // --- Tutoring Section Logic ---
+            if (tutoringSection) {
+                iamStudentBtn.addEventListener('click', () => {
+                    playUiClickSound();
+                    tutoringRoleSelection.style.display = 'none';
+                    tutoringStudentView.style.display = 'block';
+                    tutoringTeacherView.style.display = 'none';
+                    tutoringSubjectDetails.style.display = 'none';
+                    iamStudentBtn.classList.add('active-role');
+                    iamTeacherBtn.classList.remove('active-role');
+                    iamTeacherBtn.style.backgroundColor = ''; 
+                    iamTeacherBtn.style.color = '';
+                    iamTeacherBtn.style.borderColor = '';
+
+                });
+                iamTeacherBtn.addEventListener('click', () => {
+                    playUiClickSound();
+                    tutoringRoleSelection.style.display = 'none';
+                    tutoringStudentView.style.display = 'none';
+                    tutoringTeacherView.style.display = 'block';
+                    teacherPublishLessonArea.style.display = 'none';
+                    tutoringSubjectDetails.style.display = 'none';
+                    iamTeacherBtn.classList.add('active-role');
+                    iamStudentBtn.classList.remove('active-role');
+                    iamStudentBtn.style.backgroundColor = ''; 
+                    iamStudentBtn.style.color = '';
+                    iamStudentBtn.style.borderColor = '';
+                });
+
+                querySelAll('#tutoring-student-view .tutoring-card, #teacher-subject-selection .tutoring-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        playUiClickSound();
+                        const subjectName = card.querySelector('h3').textContent;
+                        const isTeacherFlow = tutoringTeacherView.style.display === 'block';
+
+                        if (isTeacherFlow) {
+                            teacherSelectedSubjectEl.textContent = `التدريس في: ${subjectName}`;
+                            teacherPublishLessonArea.style.display = 'block';
+                            tutoringSubjectDetails.style.display = 'none';
+                        } else { 
+                            tutoringSubjectTitle.textContent = subjectName;
+                            tutoringSubjectContent.textContent = `محتوى تعليمي لـ ${subjectName} سيظهر هنا قريباً. يمكنك استكشاف الدروس، الفيديوهات، أو التواصل مع مدرسين متخصصين. (هذه محاكاة).`;
+                            tutoringSubjectDetails.style.display = 'block';
+                            tutoringSubjectDetails.scrollIntoView({behavior: 'smooth'});
+                        }
+                    });
+                });
+            }
+
+
+            // --- Helper to set active section and hide others ---
+            function setActiveSection(sectionId, isModalTrigger = false) {
+                document.body.className = localStorage.getItem('darkModeZowar') === 'true' ? 'dark-mode' : ''; 
+
+                if (!isModalTrigger || (isModalTrigger && !getEl(sectionId)?.classList.contains('modal-like-section'))) {
+                    sections.forEach(s => s.classList.remove('active'));
+                    views.forEach(v => v.classList.remove('active')); 
+                }
+                
+                if (sectionId !== 'messages-view' && !isModalTrigger) {
+                     messagesView.classList.remove('active');
+                }
+
+                if (sectionId) {
+                    const targetElement = getEl(sectionId);
+                    if (targetElement) {
+                        targetElement.classList.add('active');
+                        // Ensure the main-content itself doesn't scroll, only the active section/view
+                        // This is handled by setting overflow-y: auto on .section and .view
+                        // and overflow:hidden on .main-content
+                        
+                        // Apply section-specific theme to body for global styling overrides if needed
+                        document.body.classList.add(`${sectionId}-theme`); 
+                        
+                        navItems.forEach(item => {
+                            const itemSection = item.dataset.section;
+                            const isActive = itemSection === sectionId;
+                            item.classList.toggle('active', isActive);
+                            const icon = item.querySelector('.nav-icon');
+                            const text = item.querySelector('.nav-text');
+                            
+                            if(icon && text) {
+                                let sectionBaseName = sectionId.split('-')[0]; 
+                                let activeColorVarName = `--${sectionBaseName}-accent`;
+                                let activeColorVarNameDark = `--dark-${sectionBaseName}-accent`;
+                                
+                                let finalActiveColor = getComputedStyle(document.documentElement).getPropertyValue(activeColorVarName).trim();
+                                let finalActiveColorDark = getComputedStyle(document.documentElement).getPropertyValue(activeColorVarNameDark).trim();
+
+                                if (!finalActiveColor || finalActiveColor === "null" || finalActiveColor === "") {
+                                     finalActiveColor = `var(${document.body.classList.contains('dark-mode') ? '--dark-accent-primary-global' : '--accent-primary-global'})`;
+                                }
+                                if (!finalActiveColorDark || finalActiveColorDark === "null" || finalActiveColorDark === "") {
+                                     finalActiveColorDark = 'var(--dark-accent-primary-global)';
+                                }
+                                
+                                if(isActive) {
+                                    icon.style.color = document.body.classList.contains('dark-mode') ? finalActiveColorDark : finalActiveColor;
+                                    text.style.color = document.body.classList.contains('dark-mode') ? finalActiveColorDark : finalActiveColor;
+                                } else {
+                                    icon.style.color = ''; 
+                                    text.style.color = ''; 
+                                }
+                            }
+                        });
+                    }
+                } else { // When a view like messagesView is active directly (not a main section from bottom nav)
+                     navItems.forEach(item => {
+                        item.classList.remove('active');
+                        const icon = item.querySelector('.nav-icon');
+                        const text = item.querySelector('.nav-text');
+                        if(icon) icon.style.color = '';
+                        if(text) text.style.color = '';
+                     });
+                     if (messagesView.classList.contains('active')) {
+                        document.body.classList.add('messages-view-theme');
+                     }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

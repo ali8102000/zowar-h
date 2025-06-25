@@ -1,8 +1,3 @@
-# Zowar - تطبيق الشبكة الاجتماعية المتكامل
-
-سأقدم لك كودًا متكاملًا لتطبيق Zowar مع جميع الميزات المطلوبة بشكل متطور واحترافي:
-
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -48,6 +43,7 @@
             min-height: 100vh;
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
         .section {
@@ -228,6 +224,107 @@
         @keyframes wave {
             0%, 100% { transform: scaleY(0.5); }
             50% { transform: scaleY(1.5); }
+        }
+
+        /* تأثيرات النقر */
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* تأثيرات الانتقال */
+        .slide-up {
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* النافذة المنبثقة */
+        .modal {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* العناصر النشطة في القائمة */
+        .nav-item.active i,
+        .nav-item.active span {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* النرد في لعبة الطاولة */
+        .dice {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1s ease;
+            margin: 20px auto;
+        }
+
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .face.front { transform: translateZ(40px); }
+        .face.back { transform: rotateY(180deg) translateZ(40px); }
+        .face.right { transform: rotateY(90deg) translateZ(40px); }
+        .face.left { transform: rotateY(-90deg) translateZ(40px); }
+        .face.top { transform: rotateX(90deg) translateZ(40px); }
+        .face.bottom { transform: rotateX(-90deg) translateZ(40px); }
+
+        /* لوحة لودو */
+        .ludo-board {
+            width: 100%;
+            height: 300px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* تأثيرات الإشعارات */
+        .notification {
+            animation: notificationSlideIn 0.3s ease-out;
+        }
+
+        @keyframes notificationSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
     </style>
 </head>
@@ -480,7 +577,7 @@
 
     <!-- نافذة إنشاء منشور -->
     <div id="create-post-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md overflow-hidden modal">
             <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
                 <button id="close-post-modal" class="text-gray-500">
                     <i class="fas fa-times"></i>
@@ -523,7 +620,7 @@
 
     <!-- نافذة اللعبة -->
     <div id="game-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-md bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+        <div class="w-full max-w-md bg-gray-800 rounded-xl shadow-2xl overflow-hidden modal">
             <div class="p-4 flex justify-between items-center bg-gray-900">
                 <button id="close-game-modal" class="text-white">
                     <i class="fas fa-times"></i>
@@ -568,6 +665,22 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة الإشعارات -->
+    <div id="notifications-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end justify-center">
+        <div class="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-2xl overflow-hidden modal">
+            <div class="p-4 border-b dark:border-gray-700 flex justify-between items-center">
+                <h3 class="font-bold">الإشعارات</h3>
+                <button id="close-notifications-modal" class="text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="notifications-list" class="max-h-[60vh] overflow-y-auto">
+                <!-- سيتم إضافة الإشعارات ديناميكياً -->
             </div>
         </div>
     </div>
@@ -677,7 +790,41 @@
                     lessons: 10,
                     icon: "fas fa-mosque"
                 }
-            }
+            },
+            notifications: [
+                {
+                    id: 1,
+                    type: "like",
+                    userId: 2,
+                    text: "أعجب محمد بمنشورك",
+                    time: "منذ دقيقتين",
+                    read: false
+                },
+                {
+                    id: 2,
+                    type: "comment",
+                    userId: 3,
+                    text: "علقت سارة على منشورك",
+                    time: "منذ 15 دقيقة",
+                    read: false
+                },
+                {
+                    id: 3,
+                    type: "follow",
+                    userId: 4,
+                    text: "تابعتك نورا",
+                    time: "منذ ساعة",
+                    read: true
+                }
+            ]
+        };
+
+        // تهيئة الأصوات
+        const sounds = {
+            click: new Tone.Player("https://assets.codepen.io/605876/click.mp3").toDestination(),
+            notification: new Tone.Player("https://assets.codepen.io/605876/notification.mp3").toDestination(),
+            diceRoll: new Tone.Player("https://assets.codepen.io/605876/dice-roll.mp3").toDestination(),
+            success: new Tone.Player("https://assets.codepen.io/605876/success.mp3").toDestination()
         };
 
         // تهيئة التطبيق
@@ -693,6 +840,7 @@
                 splashScreen.style.opacity = '0';
                 setTimeout(() => {
                     splashScreen.style.display = 'none';
+                    sounds.success.start();
                 }, 500);
             }, 2000);
             
@@ -700,10 +848,11 @@
             loadPosts();
             loadPopularUsers();
             loadLeaderboard();
+            loadNotifications();
             
             // التنقل بين الأقسام
             navItems.forEach(item => {
-                item.addEventListener('click', () => {
+                item.addEventListener('click', (e) => {
                     const sectionId = item.getAttribute('data-section');
                     showSection(sectionId);
                     
@@ -712,6 +861,10 @@
                         navItem.classList.remove('active');
                     });
                     item.classList.add('active');
+                    
+                    // تأثير النقر
+                    createRippleEffect(e);
+                    sounds.click.start();
                 });
             });
             
@@ -719,6 +872,7 @@
             darkModeToggle.addEventListener('click', () => {
                 document.body.classList.toggle('dark-mode');
                 localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+                sounds.click.start();
             });
             
             // تحميل الوضع الليلي من التخزين المحلي
@@ -734,6 +888,17 @@
             
             // تهيئة نافذة إنشاء المنشور
             initPostModal();
+            
+            // تهيئة نافذة الإشعارات
+            initNotifications();
+            
+            // إضافة تأثير النقر لجميع الأزرار
+            document.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    createRippleEffect(e);
+                    sounds.click.start();
+                });
+            });
         });
         
         // وظائف التطبيق
@@ -753,7 +918,7 @@
                             appData.popularUsers.find(u => u.id === post.userId);
                 
                 const postElement = document.createElement('div');
-                postElement.className = 'bg-white dark:bg-gray-800 rounded-xl shadow p-4';
+                postElement.className = 'bg-white dark:bg-gray-800 rounded-xl shadow p-4 slide-up';
                 postElement.innerHTML = `
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center space-x-3">
@@ -808,7 +973,7 @@
             
             appData.popularUsers.forEach(user => {
                 const userElement = document.createElement('div');
-                userElement.className = 'bg-white dark:bg-gray-800 rounded-xl shadow p-3 text-center';
+                userElement.className = 'bg-white dark:bg-gray-800 rounded-xl shadow p-3 text-center slide-up';
                 userElement.innerHTML = `
                     <img src="${user.avatar}" class="w-16 h-16 rounded-full mx-auto mb-2">
                     <h3 class="font-bold">${user.name}</h3>
@@ -827,7 +992,7 @@
             
             appData.leaderboard.forEach((player, index) => {
                 const playerElement = document.createElement('div');
-                playerElement.className = 'flex items-center justify-between p-2 bg-white/5 rounded-lg';
+                playerElement.className = 'flex items-center justify-between p-2 bg-white/5 rounded-lg slide-up';
                 playerElement.innerHTML = `
                     <div class="flex items-center">
                         <span class="w-6 h-6 flex items-center justify-center bg-[var(--games-accent)] text-gray-900 rounded-full mr-2 font-bold">${index + 1}</span>
@@ -840,42 +1005,197 @@
             });
         }
         
+        function loadNotifications() {
+            const notificationsList = document.getElementById('notifications-list');
+            const notificationBadge = document.getElementById('notification-badge');
+            
+            notificationsList.innerHTML = '';
+            
+            const unreadCount = appData.notifications.filter(n => !n.read).length;
+            if (unreadCount > 0) {
+                notificationBadge.textContent = unreadCount;
+                notificationBadge.classList.remove('hidden');
+            } else {
+                notificationBadge.classList.add('hidden');
+            }
+            
+            appData.notifications.forEach(notification => {
+                const user = appData.popularUsers.find(u => u.id === notification.userId) || appData.currentUser;
+                
+                const notificationElement = document.createElement('div');
+                notificationElement.className = `p-3 border-b dark:border-gray-700 flex items-start space-x-3 ${notification.read ? '' : 'bg-blue-50 dark:bg-gray-700'}`;
+                notificationElement.innerHTML = `
+                    <img src="${user.avatar}" class="w-10 h-10 rounded-full">
+                    <div class="flex-1">
+                        <p>${notification.text}</p>
+                        <p class="text-xs text-gray-500 mt-1">${notification.time}</p>
+                    </div>
+                    <div class="w-4 h-4 rounded-full ${notification.read ? 'bg-gray-300 dark:bg-gray-600' : 'bg-[var(--primary)]'}"></div>
+                `;
+                
+                notificationsList.appendChild(notificationElement);
+            });
+        }
+        
         function initGamesSection() {
             const gameCards = document.querySelectorAll('.game-card');
             
             gameCards.forEach(card => {
-                card.addEventListener('click', function() {
-                    const game = this.getAttribute
-                    // افتح نافذة اللعبة عند الضغط
+                card.addEventListener('click', function(e) {
+                    const game = this.getAttribute('data-game');
                     showGameModal(game);
+                    createRippleEffect(e);
+                    sounds.click.start();
                 });
             });
+            
+            // تهيئة لعبة الطاولة
+            const rollDiceBtn = document.getElementById('roll-dice-btn');
+            if (rollDiceBtn) {
+                rollDiceBtn.addEventListener('click', () => {
+                    const dice = document.getElementById('ludo-dice');
+                    const result = Math.floor(Math.random() * 6) + 1;
+                    
+                    // تأثير دوران النرد
+                    dice.style.transform = `rotateX(${Math.random() * 360}deg) rotateY(${Math.random() * 360}deg) rotateZ(${Math.random() * 360}deg)`;
+                    
+                    sounds.diceRoll.start();
+                    
+                    setTimeout(() => {
+                        dice.style.transform = `rotateX(0) rotateY(0) rotateZ(0)`;
+                        
+                        // تحديد الوجه الذي يجب إظهاره بناءً على النتيجة
+                        const faces = dice.querySelectorAll('.face');
+                        faces.forEach(face => face.style.display = 'none');
+                        
+                        let faceToShow;
+                        switch(result) {
+                            case 1: faceToShow = 'front'; break;
+                            case 2: faceToShow = 'back'; break;
+                            case 3: faceToShow = 'right'; break;
+                            case 4: faceToShow = 'left'; break;
+                            case 5: faceToShow = 'top'; break;
+                            case 6: faceToShow = 'bottom'; break;
+                        }
+                        
+                        dice.querySelector(`.${faceToShow}`).style.display = 'flex';
+                        
+                        // عرض النتيجة
+                        setTimeout(() => {
+                            alert(`لقد حصلت على ${result}!`);
+                        }, 500);
+                    }, 1000);
+                });
+            }
         }
-
+        
         function showGameModal(gameName) {
             const gameModal = document.getElementById('game-modal');
             const gameTitle = document.getElementById('game-title');
             const gameContent = document.getElementById('game-content');
-
+            
             gameModal.classList.remove('hidden');
-
+            
             switch (gameName) {
                 case 'ludo':
                     gameTitle.textContent = 'يلا لودو';
-                    // يمكنك هنا تخصيص المحتوى
+                    gameContent.innerHTML = `
+                        <div id="ludo-game" class="text-center">
+                            <div class="mb-4">
+                                <div id="ludo-dice" class="dice mx-auto my-4">
+                                    <div class="face front">1</div>
+                                    <div class="face back">2</div>
+                                    <div class="face right">3</div>
+                                    <div class="face left">4</div>
+                                    <div class="face top">5</div>
+                                    <div class="face bottom">6</div>
+                                </div>
+                                <button id="roll-dice-btn" class="btn btn-primary px-6 py-3 rounded-full text-lg font-bold">
+                                    <i class="fas fa-dice mr-2"></i> ارمي النرد
+                                </button>
+                            </div>
+                            
+                            <div class="grid grid-cols-4 gap-2 mb-4">
+                                <div class="player bg-red-500 rounded-lg p-2 text-white">
+                                    <p>أنت</p>
+                                    <p class="text-xs">4 قطع</p>
+                                </div>
+                                <div class="player bg-blue-500 rounded-lg p-2 text-white">
+                                    <p>محمد</p>
+                                    <p class="text-xs">3 قطع</p>
+                                </div>
+                                <div class="player bg-green-500 rounded-lg p-2 text-white">
+                                    <p>سارة</p>
+                                    <p class="text-xs">4 قطع</p>
+                                </div>
+                                <div class="player bg-yellow-500 rounded-lg p-2 text-white">
+                                    <p>نورا</p>
+                                    <p class="text-xs">2 قطع</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                     break;
                 case 'snakes-ladders':
                     gameTitle.textContent = 'حية ودرج';
+                    gameContent.innerHTML = `
+                        <div class="text-center">
+                            <img src="https://i.imgur.com/5ZQZQ9Z.png" class="w-full rounded-lg mb-4">
+                            <button class="btn btn-primary px-6 py-3 rounded-full text-lg font-bold">
+                                <i class="fas fa-play mr-2"></i> بدء اللعبة
+                            </button>
+                        </div>
+                    `;
                     break;
                 case 'basketball':
                     gameTitle.textContent = 'رميات السلة';
+                    gameContent.innerHTML = `
+                        <div class="text-center">
+                            <div class="relative mb-4">
+                                <img src="https://i.imgur.com/5ZQZQ9Z.png" class="w-full rounded-lg">
+                                <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center">
+                                    <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-full w-20 h-20 flex items-center justify-center">
+                                        <span class="text-2xl font-bold">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary px-6 py-3 rounded-full text-lg font-bold">
+                                <i class="fas fa-basketball-ball mr-2"></i> رمي الكرة
+                            </button>
+                        </div>
+                    `;
                     break;
                 case 'quiz':
                     gameTitle.textContent = 'أسئلة عامة';
+                    gameContent.innerHTML = `
+                        <div class="text-center">
+                            <div class="bg-white dark:bg-gray-700 rounded-lg p-4 mb-4">
+                                <h4 class="font-bold mb-2">ما هي عاصمة فرنسا؟</h4>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button class="btn bg-gray-100 dark:bg-gray-600 rounded-lg py-2">لندن</button>
+                                    <button class="btn bg-gray-100 dark:bg-gray-600 rounded-lg py-2">باريس</button>
+                                    <button class="btn bg-gray-100 dark:bg-gray-600 rounded-lg py-2">مدريد</button>
+                                    <button class="btn bg-gray-100 dark:bg-gray-600 rounded-lg py-2">روما</button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">السؤال 1 من 10</span>
+                                <span class="text-sm font-bold">0 نقطة</span>
+                            </div>
+                        </div>
+                    `;
                     break;
             }
+            
+            // إعادة تهيئة الأزرار بعد تغيير المحتوى
+            document.querySelectorAll('#game-content button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    createRippleEffect(e);
+                    sounds.click.start();
+                });
+            });
         }
-
+        
         function initTutoringSection() {
             const studentBtn = document.getElementById('student-btn');
             const teacherBtn = document.getElementById('teacher-btn');
@@ -886,10 +1206,12 @@
             const subjectTitle = document.getElementById('subject-title');
             const subjectContent = document.getElementById('subject-content');
             const backBtn = document.getElementById('back-to-subjects');
+            const createLessonBtn = document.getElementById('create-lesson-btn');
 
             studentBtn.addEventListener('click', () => {
                 studentView.style.display = 'block';
                 teacherView.style.display = 'none';
+                subjectDetails.style.display = 'none';
                 studentBtn.classList.add('active-role');
                 teacherBtn.classList.remove('active-role');
             });
@@ -897,6 +1219,7 @@
             teacherBtn.addEventListener('click', () => {
                 studentView.style.display = 'none';
                 teacherView.style.display = 'block';
+                subjectDetails.style.display = 'none';
                 studentBtn.classList.remove('active-role');
                 teacherBtn.classList.add('active-role');
             });
@@ -906,7 +1229,20 @@
                     const subject = card.getAttribute('data-subject');
                     const data = appData.tutoringSubjects[subject];
                     subjectTitle.textContent = data.title;
-                    subjectContent.textContent = data.description;
+                    subjectContent.innerHTML = `
+                        <p class="mb-3">${data.description}</p>
+                        <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
+                            <h4 class="font-bold mb-2">الدروس المتاحة (${data.lessons})</h4>
+                            <div class="space-y-2">
+                                ${Array.from({length: data.lessons}, (_, i) => `
+                                <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded">
+                                    <span>الدرس ${i + 1}: مقدمة في ${data.title}</span>
+                                    <button class="btn btn-primary text-xs px-2 py-1">ابدأ</button>
+                                </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
                     studentView.style.display = 'none';
                     subjectDetails.style.display = 'block';
                 });
@@ -916,12 +1252,22 @@
                 subjectDetails.style.display = 'none';
                 studentView.style.display = 'block';
             });
-        }
 
+            if (createLessonBtn) {
+                createLessonBtn.addEventListener('click', () => {
+                    alert('سيتم فتح نموذج إنشاء درس جديد');
+                });
+            }
+        }
+        
         function initPostModal() {
             const createPostBtn = document.getElementById('create-post-btn');
             const modal = document.getElementById('create-post-modal');
             const closeBtn = document.getElementById('close-post-modal');
+            const publishBtn = document.getElementById('publish-post-btn');
+            const postImageInput = document.getElementById('post-image-input');
+            const postPreview = document.getElementById('post-preview');
+            const postImagePreview = document.getElementById('post-image-preview');
 
             createPostBtn.addEventListener('click', () => {
                 modal.classList.remove('hidden');
@@ -930,10 +1276,87 @@
             closeBtn.addEventListener('click', () => {
                 modal.classList.add('hidden');
             });
-        }
 
-        // زر إغلاق نافذة اللعبة
-        document.getElementById('close-game-modal').addEventListener('click', () => {
-            document.getElementById('game-modal').classList.add('hidden');
-        });
+            publishBtn.addEventListener('click', () => {
+                const postText = document.getElementById('post-text').value;
+                if (postText.trim() === '' && !postImageInput.files[0]) {
+                    alert('الرجاء إدخال نص أو صورة للمنشور');
+                    return;
+                }
+
+                // إضافة المنشور الجديد
+                const newPost = {
+                    id: appData.posts.length + 1,
+                    userId: 1,
+                    text: postText,
+                    image: postImageInput.files[0] ? URL.createObjectURL(postImageInput.files[0]) : null,
+                    likes: 0,
+                    comments: 0,
+                    time: "الآن"
+                };
+
+                appData.posts.unshift(newPost);
+                loadPosts();
+                modal.classList.add('hidden');
+                
+                // إعادة تعيين النموذج
+                document.getElementById('post-text').value = '';
+                postImageInput.value = '';
+                postPreview.classList.add('hidden');
+                
+                // عرض رسالة نجاح
+                alert('تم نشر منشورك بنجاح!');
+            });
+
+            postImageInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        postImagePreview.src = e.target.result;
+                        postPreview.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+        
+        function initNotifications() {
+            const notificationsBtn = document.getElementById('notifications-btn');
+            const notificationsModal = document.getElementById('notifications-modal');
+            const closeNotificationsBtn = document.getElementById('close-notifications-modal');
+
+            notificationsBtn.addEventListener('click', () => {
+                notificationsModal.classList.remove('hidden');
+                sounds.notification.start();
+                
+                // وضع علامة على الإشعارات كمقروءة
+                appData.notifications.forEach(n => n.read = true);
+                loadNotifications();
+            });
+
+            closeNotificationsBtn.addEventListener('click', () => {
+                notificationsModal.classList.add('hidden');
+            });
+        }
+        
+        function createRippleEffect(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement('span');
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+            
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+            circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+            circle.classList.add('ripple-effect');
+            
+            const ripple = button.getElementsByClassName('ripple-effect')[0];
+            if (ripple) {
+                ripple.remove();
+            }
+            
+            button.appendChild(circle);
+        }
     </script>
+</body>
+</html>

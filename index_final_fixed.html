@@ -1,0 +1,1074 @@
+# Zowar - تطبيق الشبكة الاجتماعية المتكامل
+
+سأقدم لك كودًا متكاملًا لتطبيق Zowar مع جميع الميزات المطلوبة بشكل متطور واحترافي:
+
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zowar - شبكتك الاجتماعية العالمية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --text: #2b2d42;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --games-bg: linear-gradient(135deg, #3a3a3a 0%, #1a1a1a 100%);
+            --games-accent: #FFEB3B;
+            --tutoring-bg: linear-gradient(135deg, #E1F5FE 0%, #E8EAF6 100%);
+            --tutoring-accent: #5C6BC0;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--light);
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+        .dark-mode {
+            background-color: var(--dark);
+            color: var(--light);
+        }
+
+        .app-container {
+            max-width: 450px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .section {
+            display: none;
+            padding-bottom: 70px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* تصميم الألعاب */
+        .game-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .dark-mode .game-card {
+            background: #2d3748;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .game-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--games-accent);
+        }
+
+        /* تصميم التدريس */
+        .tutoring-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .dark-mode .tutoring-card {
+            background: #2d3748;
+        }
+
+        .tutoring-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .tutoring-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--tutoring-accent);
+        }
+
+        /* تأثيرات الأزرار */
+        .btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-effect:after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .btn-effect:focus:not(:active)::after {
+            animation: ripple 0.6s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+
+        /* تأثيرات النقر */
+        .click-effect {
+            animation: click 0.3s ease;
+        }
+
+        @keyframes click {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        /* شاشة التحميل */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .splash-logo {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 1rem;
+            animation: bounce 1.5s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* موجات الصوت */
+        .waveform {
+            display: flex;
+            align-items: center;
+            height: 20px;
+        }
+
+        .waveform span {
+            display: inline-block;
+            width: 3px;
+            margin: 0 1px;
+            background: currentColor;
+            animation: wave 1.2s infinite ease-in-out;
+        }
+
+        .waveform span:nth-child(1) { height: 10px; animation-delay: 0s; }
+        .waveform span:nth-child(2) { height: 15px; animation-delay: 0.2s; }
+        .waveform span:nth-child(3) { height: 20px; animation-delay: 0.4s; }
+        .waveform span:nth-child(4) { height: 15px; animation-delay: 0.6s; }
+        .waveform span:nth-child(5) { height: 10px; animation-delay: 0.8s; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.5); }
+            50% { transform: scaleY(1.5); }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <!-- شاشة التحميل -->
+    <div class="splash-screen">
+        <div class="splash-logo">Zowar</div>
+        <div class="text-white text-xl">جاري التحميل...</div>
+    </div>
+
+    <div class="app-container">
+        <!-- الهيدر الرئيسي -->
+        <header class="p-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md sticky top-0 z-10 shadow-sm flex justify-between items-center">
+            <button id="menu-btn" class="text-xl">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <h1 class="text-xl font-bold text-[var(--primary)] dark:text-[var(--accent)] flex items-center">
+                <i class="fas fa-globe mr-2"></i> Zowar
+            </h1>
+            
+            <div class="flex items-center space-x-3">
+                <button id="notifications-btn" class="relative">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span id="notification-badge" class="absolute -top-1 -right-1 bg-[var(--danger)] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">3</span>
+                </button>
+                <button id="dark-mode-toggle" class="text-xl">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- الأقسام الرئيسية -->
+        <main class="relative">
+            <!-- قسم الرئيسية -->
+            <section id="home-section" class="section active">
+                <!-- محتوى الرئيسية -->
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">أحدث المنشورات</h2>
+                        <button id="create-post-btn" class="btn btn-primary px-4 py-2 rounded-full">
+                            <i class="fas fa-plus mr-1"></i> جديد
+                        </button>
+                    </div>
+                    
+                    <div id="posts-container" class="space-y-4">
+                        <!-- سيتم إضافة المنشورات ديناميكياً -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- قسم الاستكشاف -->
+            <section id="explore-section" class="section p-4">
+                <h2 class="text-2xl font-bold mb-6">اكتشف</h2>
+                
+                <div class="mb-6">
+                    <div class="relative">
+                        <input type="text" placeholder="ابحث عن أشخاص أو اهتمامات..." class="w-full bg-gray-100 dark:bg-gray-700 rounded-full py-3 px-5 pl-12 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
+                        <i class="fas fa-search absolute right-4 top-3.5 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-3">الأكثر متابعة</h3>
+                    <div id="popular-users" class="grid grid-cols-2 gap-3">
+                        <!-- سيتم إضافة المستخدمين ديناميكياً -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- قسم الألعاب -->
+            <section id="games-section" class="section p-4" style="background: var(--games-bg); color: white;">
+                <h2 class="text-2xl font-bold mb-6 text-center" style="color: var(--games-accent);">Zowar Play 🎮</h2>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="game-card" data-game="ludo">
+                        <div class="game-icon">
+                            <i class="fas fa-dice"></i>
+                        </div>
+                        <h3 class="font-bold">يلا لودو</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">لعبة الطاولة الكلاسيكية</p>
+                    </div>
+                    
+                    <div class="game-card" data-game="snakes-ladders">
+                        <div class="game-icon">
+                            <i class="fas fa-snake"></i>
+                        </div>
+                        <h3 class="font-bold">حية ودرج</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">تحدي الحظ والاستراتيجية</p>
+                    </div>
+                    
+                    <div class="game-card" data-game="basketball">
+                        <div class="game-icon">
+                            <i class="fas fa-basketball-ball"></i>
+                        </div>
+                        <h3 class="font-bold">رميات السلة</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">اختبر مهاراتك</p>
+                    </div>
+                    
+                    <div class="game-card" data-game="quiz">
+                        <div class="game-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <h3 class="font-bold">أسئلة عامة</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">اختبر معلوماتك</p>
+                    </div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-white/10 rounded-xl">
+                    <h3 class="font-bold mb-2">أفضل اللاعبين</h3>
+                    <div id="leaderboard" class="space-y-2">
+                        <!-- لوحة الصدارة -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- قسم التدريس -->
+            <section id="tutoring-section" class="section p-4" style="background: var(--tutoring-bg);">
+                <h2 class="text-2xl font-bold mb-6 text-center" style="color: var(--tutoring-accent);">مركز Zowar التعليمي 📚</h2>
+                
+                <div class="flex mb-6 bg-gray-200 dark:bg-gray-700 rounded-full p-1">
+                    <button id="student-btn" class="flex-1 py-2 px-4 rounded-full font-medium active-role">طالب</button>
+                    <button id="teacher-btn" class="flex-1 py-2 px-4 rounded-full font-medium">معلّم</button>
+                </div>
+                
+                <div id="student-view">
+                    <h3 class="text-lg font-semibold mb-4">اختر المادة:</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="tutoring-card" data-subject="math">
+                            <div class="tutoring-icon">
+                                <i class="fas fa-square-root-alt"></i>
+                            </div>
+                            <h3 class="font-bold">الرياضيات</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">12 درس متاح</p>
+                        </div>
+                        <div class="tutoring-card" data-subject="science">
+                            <div class="tutoring-icon">
+                                <i class="fas fa-flask"></i>
+                            </div>
+                            <h3 class="font-bold">العلوم</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">8 دروس متاحة</p>
+                        </div>
+                        <div class="tutoring-card" data-subject="arabic">
+                            <div class="tutoring-icon">
+                                <i class="fas fa-language"></i>
+                            </div>
+                            <h3 class="font-bold">اللغة العربية</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">15 درس متاح</p>
+                        </div>
+                        <div class="tutoring-card" data-subject="islamic">
+                            <div class="tutoring-icon">
+                                <i class="fas fa-mosque"></i>
+                            </div>
+                            <h3 class="font-bold">الدراسات الإسلامية</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">10 دروس متاحة</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="teacher-view" style="display: none;">
+                    <h3 class="text-lg font-semibold mb-4">إدارة الدروس:</h3>
+                    <button id="create-lesson-btn" class="btn btn-primary w-full mb-4 btn-effect">
+                        <i class="fas fa-plus mr-2"></i> إنشاء درس جديد
+                    </button>
+                    
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
+                        <h4 class="font-bold mb-3">الدروس النشطة</h4>
+                        <div id="active-lessons" class="space-y-3">
+                            <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                <p>لا توجد دروس نشطة حالياً</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="subject-details" class="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4" style="display: none;">
+                    <h3 id="subject-title" class="text-xl font-bold mb-3"></h3>
+                    <div id="subject-content" class="text-gray-700 dark:text-gray-300">
+                        <!-- محتوى المادة الدراسية -->
+                    </div>
+                    <button id="back-to-subjects" class="btn btn-secondary mt-4 w-full">
+                        <i class="fas fa-arrow-left mr-2"></i> العودة للقائمة
+                    </button>
+                </div>
+            </section>
+
+            <!-- قسم الملف الشخصي -->
+            <section id="profile-section" class="section p-4">
+                <div class="flex flex-col items-center mb-6">
+                    <div class="relative mb-4">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow">
+                    </div>
+                    <h2 class="text-xl font-bold">أحمد محمد</h2>
+                    <p class="text-gray-500">@ahmed</p>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-2 text-center bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-6">
+                    <div>
+                        <p class="font-bold">156</p>
+                        <p class="text-xs text-gray-500">منشور</p>
+                    </div>
+                    <div>
+                        <p class="font-bold">1.2K</p>
+                        <p class="text-xs text-gray-500">متابعون</p>
+                    </div>
+                    <div>
+                        <p class="font-bold">487</p>
+                        <p class="text-xs text-gray-500">يتابع</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <button class="btn btn-primary w-full">
+                        <i class="fas fa-user-edit mr-2"></i> تعديل الملف الشخصي
+                    </button>
+                    <button class="btn bg-gray-100 dark:bg-gray-700 w-full">
+                        <i class="fas fa-cog mr-2"></i> الإعدادات
+                    </button>
+                    <button class="btn bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 w-full">
+                        <i class="fas fa-sign-out-alt mr-2"></i> تسجيل الخروج
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- التنقل السفلي -->
+        <nav class="bottom-nav flex justify-around items-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 fixed bottom-0 w-full max-w-[450px] py-2">
+            <button data-section="home-section" class="nav-item active flex flex-col items-center">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-xs mt-1">الرئيسية</span>
+            </button>
+            <button data-section="explore-section" class="nav-item flex flex-col items-center">
+                <i class="fas fa-compass text-xl"></i>
+                <span class="text-xs mt-1">استكشف</span>
+            </button>
+            <button data-section="games-section" class="nav-item flex flex-col items-center">
+                <i class="fas fa-gamepad text-xl"></i>
+                <span class="text-xs mt-1">ألعاب</span>
+            </button>
+            <button data-section="tutoring-section" class="nav-item flex flex-col items-center">
+                <i class="fas fa-book text-xl"></i>
+                <span class="text-xs mt-1">التدريس</span>
+            </button>
+            <button data-section="profile-section" class="nav-item flex flex-col items-center">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-xs mt-1">حسابي</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- نافذة إنشاء منشور -->
+    <div id="create-post-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md overflow-hidden">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <button id="close-post-modal" class="text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="font-bold">إنشاء منشور</h3>
+                <button id="publish-post-btn" class="text-[var(--primary)] font-medium">نشر</button>
+            </div>
+            
+            <div class="p-4">
+                <div class="flex items-start space-x-3">
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-10 h-10 rounded-full">
+                    <textarea id="post-text" class="flex-1 bg-transparent min-h-[100px] focus:outline-none" placeholder="ماذا تريد أن تنشر؟"></textarea>
+                </div>
+                
+                <div id="post-preview" class="mt-4 rounded-xl overflow-hidden hidden">
+                    <img id="post-image-preview" class="w-full max-h-[300px] object-cover">
+                </div>
+            </div>
+            
+            <div class="p-3 border-t dark:border-gray-700 flex justify-between">
+                <label class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                    <i class="fas fa-image text-[var(--success)]"></i>
+                    <input type="file" id="post-image-input" accept="image/*" class="hidden">
+                </label>
+                
+                <button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-user-tag text-[var(--primary)]"></i>
+                </button>
+                
+                <button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-smile text-[var(--warning)]"></i>
+                </button>
+                
+                <button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-map-marker-alt text-[var(--danger)]"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة اللعبة -->
+    <div id="game-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-md bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+            <div class="p-4 flex justify-between items-center bg-gray-900">
+                <button id="close-game-modal" class="text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 id="game-title" class="text-xl font-bold text-white">يلا لودو</h3>
+                <div class="w-6"></div>
+            </div>
+            
+            <div id="game-content" class="p-4">
+                <!-- محتوى اللعبة الديناميكي -->
+                <div id="ludo-game" class="text-center">
+                    <div class="mb-4">
+                        <div id="ludo-dice" class="dice mx-auto my-4">
+                            <div class="face front">1</div>
+                            <div class="face back">2</div>
+                            <div class="face right">3</div>
+                            <div class="face left">4</div>
+                            <div class="face top">5</div>
+                            <div class="face bottom">6</div>
+                        </div>
+                        <button id="roll-dice-btn" class="btn btn-primary px-6 py-3 rounded-full text-lg font-bold">
+                            <i class="fas fa-dice mr-2"></i> ارمي النرد
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 gap-2 mb-4">
+                        <div class="player bg-red-500 rounded-lg p-2 text-white">
+                            <p>أنت</p>
+                            <p class="text-xs">4 قطع</p>
+                        </div>
+                        <div class="player bg-blue-500 rounded-lg p-2 text-white">
+                            <p>محمد</p>
+                            <p class="text-xs">3 قطع</p>
+                        </div>
+                        <div class="player bg-green-500 rounded-lg p-2 text-white">
+                            <p>سارة</p>
+                            <p class="text-xs">4 قطع</p>
+                        </div>
+                        <div class="player bg-yellow-500 rounded-lg p-2 text-white">
+                            <p>نورا</p>
+                            <p class="text-xs">2 قطع</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // بيانات التطبيق
+        const appData = {
+            currentUser: {
+                id: 1,
+                name: "أحمد محمد",
+                username: "ahmed",
+                avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+                bio: "مطور ويب ومهتم بالتكنولوجيا",
+                postsCount: 156,
+                followers: 1250,
+                following: 487
+            },
+            posts: [
+                {
+                    id: 1,
+                    userId: 1,
+                    text: "هذا أول منشور تجريبي في تطبيق Zowar!",
+                    image: "https://source.unsplash.com/random/600x400?technology",
+                    likes: 24,
+                    comments: 5,
+                    time: "منذ ساعة"
+                },
+                {
+                    id: 2,
+                    userId: 2,
+                    text: "تجربة جديدة مع تطبيق Zowar الرائع!",
+                    image: "https://source.unsplash.com/random/600x400?nature",
+                    likes: 56,
+                    comments: 12,
+                    time: "منذ 3 ساعات"
+                }
+            ],
+            popularUsers: [
+                {
+                    id: 2,
+                    name: "محمد علي",
+                    username: "mohammed",
+                    avatar: "https://randomuser.me/api/portraits/men/22.jpg",
+                    followers: 3200
+                },
+                {
+                    id: 3,
+                    name: "سارة أحمد",
+                    username: "sara",
+                    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+                    followers: 2800
+                },
+                {
+                    id: 4,
+                    name: "نورا خالد",
+                    username: "nora",
+                    avatar: "https://randomuser.me/api/portraits/women/33.jpg",
+                    followers: 2100
+                },
+                {
+                    id: 5,
+                    name: "خالد سعيد",
+                    username: "khaled",
+                    avatar: "https://randomuser.me/api/portraits/men/55.jpg",
+                    followers: 1800
+                }
+            ],
+            leaderboard: [
+                {
+                    name: "أحمد محمد",
+                    score: 1250,
+                    game: "يلا لودو"
+                },
+                {
+                    name: "سارة أحمد",
+                    score: 980,
+                    game: "حية ودرج"
+                },
+                {
+                    name: "محمد علي",
+                    score: 875,
+                    game: "رميات السلة"
+                }
+            ],
+            tutoringSubjects: {
+                math: {
+                    title: "الرياضيات",
+                    description: "دروس متكاملة في الرياضيات لجميع المستويات",
+                    lessons: 12,
+                    icon: "fas fa-square-root-alt"
+                },
+                science: {
+                    title: "العلوم",
+                    description: "تجارب ونظريات علمية ممتعة",
+                    lessons: 8,
+                    icon: "fas fa-flask"
+                },
+                arabic: {
+                    title: "اللغة العربية",
+                    description: "قواعد اللغة والأدب العربي",
+                    lessons: 15,
+                    icon: "fas fa-language"
+                },
+                islamic: {
+                    title: "الدراسات الإسلامية",
+                    description: "القرآن الكريم والسنة النبوية",
+                    lessons: 10,
+                    icon: "fas fa-mosque"
+                }
+            }
+        };
+
+        // تهيئة التطبيق
+        document.addEventListener('DOMContentLoaded', () => {
+            // العناصر الرئيسية
+            const splashScreen = document.querySelector('.splash-screen');
+            const sections = document.querySelectorAll('.section');
+            const navItems = document.querySelectorAll('.nav-item');
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            
+            // إخفاء شاشة التحميل بعد 2 ثانية
+            setTimeout(() => {
+                splashScreen.style.opacity = '0';
+                setTimeout(() => {
+                    splashScreen.style.display = 'none';
+                }, 500);
+            }, 2000);
+            
+            // تحميل البيانات
+            loadPosts();
+            loadPopularUsers();
+            loadLeaderboard();
+            
+            // التنقل بين الأقسام
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const sectionId = item.getAttribute('data-section');
+                    showSection(sectionId);
+                    
+                    // تحديث العنصر النشط في القائمة السفلية
+                    navItems.forEach(navItem => {
+                        navItem.classList.remove('active');
+                    });
+                    item.classList.add('active');
+                });
+            });
+            
+            // تبديل الوضع الليلي
+            darkModeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            });
+            
+            // تحميل الوضع الليلي من التخزين المحلي
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+            }
+            
+            // تهيئة قسم الألعاب
+            initGamesSection();
+            
+            // تهيئة قسم التدريس
+            initTutoringSection();
+            
+            // تهيئة نافذة إنشاء المنشور
+            initPostModal();
+        });
+        
+        // وظائف التطبيق
+        function showSection(sectionId) {
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+        }
+        
+        function loadPosts() {
+            const postsContainer = document.getElementById('posts-container');
+            postsContainer.innerHTML = '';
+            
+            appData.posts.forEach(post => {
+                const user = post.userId === 1 ? appData.currentUser : 
+                            appData.popularUsers.find(u => u.id === post.userId);
+                
+                const postElement = document.createElement('div');
+                postElement.className = 'bg-white dark:bg-gray-800 rounded-xl shadow p-4';
+                postElement.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <img src="${user.avatar}" class="w-10 h-10 rounded-full">
+                            <div>
+                                <h3 class="font-bold">${user.name}</h3>
+                                <p class="text-xs text-gray-500">@${user.username} · ${post.time}</p>
+                            </div>
+                        </div>
+                        <button class="text-gray-500">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                    
+                    <p class="mb-3">${post.text}</p>
+                    
+                    ${post.image ? `
+                    <div class="relative mb-3">
+                        <img src="${post.image}" class="w-full rounded-lg">
+                        <div class="absolute bottom-3 right-3 flex space-x-2">
+                            <button class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center">
+                                <i class="fas fa-heart text-[var(--danger)]"></i>
+                            </button>
+                            <button class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center">
+                                <i class="fas fa-comment text-[var(--primary)]"></i>
+                            </button>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="flex items-center justify-between text-gray-500 text-sm">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex items-center">
+                                <i class="fas fa-heart text-[var(--danger)] mr-1"></i>
+                                <span>${post.likes}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-comment text-[var(--primary)] mr-1"></i>
+                                <span>${post.comments}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                postsContainer.appendChild(postElement);
+            });
+        }
+        
+        function loadPopularUsers() {
+            const popularUsersContainer = document.getElementById('popular-users');
+            popularUsersContainer.innerHTML = '';
+            
+            appData.popularUsers.forEach(user => {
+                const userElement = document.createElement('div');
+                userElement.className = 'bg-white dark:bg-gray-800 rounded-xl shadow p-3 text-center';
+                userElement.innerHTML = `
+                    <img src="${user.avatar}" class="w-16 h-16 rounded-full mx-auto mb-2">
+                    <h3 class="font-bold">${user.name}</h3>
+                    <p class="text-xs text-gray-500">@${user.username}</p>
+                    <p class="text-xs mt-1"><i class="fas fa-users mr-1"></i> ${user.followers.toLocaleString()}</p>
+                    <button class="btn btn-primary text-xs px-3 py-1 mt-2">متابعة</button>
+                `;
+                
+                popularUsersContainer.appendChild(userElement);
+            });
+        }
+        
+        function loadLeaderboard() {
+            const leaderboardContainer = document.getElementById('leaderboard');
+            leaderboardContainer.innerHTML = '';
+            
+            appData.leaderboard.forEach((player, index) => {
+                const playerElement = document.createElement('div');
+                playerElement.className = 'flex items-center justify-between p-2 bg-white/5 rounded-lg';
+                playerElement.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="w-6 h-6 flex items-center justify-center bg-[var(--games-accent)] text-gray-900 rounded-full mr-2 font-bold">${index + 1}</span>
+                        <span>${player.name}</span>
+                    </div>
+                    <span class="text-[var(--games-accent)] font-bold">${player.score}</span>
+                `;
+                
+                leaderboardContainer.appendChild(playerElement);
+            });
+        }
+        
+        function initGamesSection() {
+            const gameCards = document.querySelectorAll('.game-card');
+            
+            gameCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const game = this.getAttribut
+<script>
+    function initGamesSection() {
+        const gameCards = document.querySelectorAll('.game-card');
+        gameCards.forEach(card => {
+            card.addEventListener('click', function () {
+                const game = this.getAttribute('data-game');
+                showGameModal(game);
+            });
+        });
+    }
+
+    function showGameModal(gameName) {
+        const gameModal = document.getElementById('game-modal');
+        const gameTitle = document.getElementById('game-title');
+
+        gameModal.classList.remove('hidden');
+
+        switch (gameName) {
+            case 'ludo':
+                gameTitle.textContent = 'يلا لودو';
+                break;
+            case 'snakes-ladders':
+                gameTitle.textContent = 'حية ودرج';
+                break;
+            case 'basketball':
+                gameTitle.textContent = 'رميات السلة';
+                break;
+            case 'quiz':
+                gameTitle.textContent = 'أسئلة عامة';
+                break;
+        }
+    }
+
+    function initTutoringSection() {
+        const studentBtn = document.getElementById('student-btn');
+        const teacherBtn = document.getElementById('teacher-btn');
+        const studentView = document.getElementById('student-view');
+        const teacherView = document.getElementById('teacher-view');
+        const subjectCards = document.querySelectorAll('.tutoring-card');
+        const subjectDetails = document.getElementById('subject-details');
+        const subjectTitle = document.getElementById('subject-title');
+        const subjectContent = document.getElementById('subject-content');
+        const backBtn = document.getElementById('back-to-subjects');
+
+        studentBtn.addEventListener('click', () => {
+            studentView.style.display = 'block';
+            teacherView.style.display = 'none';
+            studentBtn.classList.add('active-role');
+            teacherBtn.classList.remove('active-role');
+        });
+
+        teacherBtn.addEventListener('click', () => {
+            studentView.style.display = 'none';
+            teacherView.style.display = 'block';
+            studentBtn.classList.remove('active-role');
+            teacherBtn.classList.add('active-role');
+        });
+
+        subjectCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const subject = card.getAttribute('data-subject');
+                const data = appData.tutoringSubjects[subject];
+                subjectTitle.textContent = data.title;
+                subjectContent.textContent = data.description;
+                studentView.style.display = 'none';
+                subjectDetails.style.display = 'block';
+            });
+        });
+
+        backBtn.addEventListener('click', () => {
+            subjectDetails.style.display = 'none';
+            studentView.style.display = 'block';
+        });
+    }
+
+    function initPostModal() {
+        const createPostBtn = document.getElementById('create-post-btn');
+        const modal = document.getElementById('create-post-modal');
+        const closeBtn = document.getElementById('close-post-modal');
+
+        createPostBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    }
+
+    // زر إغلاق نافذة اللعبة
+    document.getElementById('close-game-modal').addEventListener('click', () => {
+        document.getElementById('game-modal').classList.add('hidden');
+    });
+</script>
+
+
+<script>
+    function initGamesSection() {
+        const gameCards = document.querySelectorAll('.game-card');
+        gameCards.forEach(card => {
+            card.addEventListener('click', function () {
+                const game = this.getAttribute('data-game');
+                showGameModal(game);
+            });
+        });
+    }
+
+    function showGameModal(gameName) {
+        const gameModal = document.getElementById('game-modal');
+        const gameTitle = document.getElementById('game-title');
+
+        gameModal.classList.remove('hidden');
+
+        switch (gameName) {
+            case 'ludo':
+                gameTitle.textContent = 'يلا لودو';
+                break;
+            case 'snakes-ladders':
+                gameTitle.textContent = 'حية ودرج';
+                break;
+            case 'basketball':
+                gameTitle.textContent = 'رميات السلة';
+                break;
+            case 'quiz':
+                gameTitle.textContent = 'أسئلة عامة';
+                break;
+        }
+    }
+
+    function initTutoringSection() {
+        const studentBtn = document.getElementById('student-btn');
+        const teacherBtn = document.getElementById('teacher-btn');
+        const studentView = document.getElementById('student-view');
+        const teacherView = document.getElementById('teacher-view');
+        const subjectCards = document.querySelectorAll('.tutoring-card');
+        const subjectDetails = document.getElementById('subject-details');
+        const subjectTitle = document.getElementById('subject-title');
+        const subjectContent = document.getElementById('subject-content');
+        const backBtn = document.getElementById('back-to-subjects');
+
+        studentBtn.addEventListener('click', () => {
+            studentView.style.display = 'block';
+            teacherView.style.display = 'none';
+            studentBtn.classList.add('active-role');
+            teacherBtn.classList.remove('active-role');
+        });
+
+        teacherBtn.addEventListener('click', () => {
+            studentView.style.display = 'none';
+            teacherView.style.display = 'block';
+            studentBtn.classList.remove('active-role');
+            teacherBtn.classList.add('active-role');
+        });
+
+        subjectCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const subject = card.getAttribute('data-subject');
+                const data = appData.tutoringSubjects[subject];
+                subjectTitle.textContent = data.title;
+                subjectContent.textContent = data.description;
+                studentView.style.display = 'none';
+                subjectDetails.style.display = 'block';
+            });
+        });
+
+        backBtn.addEventListener('click', () => {
+            subjectDetails.style.display = 'none';
+            studentView.style.display = 'block';
+        });
+    }
+
+    function initPostModal() {
+        const createPostBtn = document.getElementById('create-post-btn');
+        const modal = document.getElementById('create-post-modal');
+        const closeBtn = document.getElementById('close-post-modal');
+
+        createPostBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+    }
+
+    // زر إغلاق نافذة اللعبة
+    document.getElementById('close-game-modal').addEventListener('click', () => {
+        document.getElementById('game-modal').classList.add('hidden');
+    });
+
+    // إصلاح التنقل بين الأقسام
+    document.addEventListener("DOMContentLoaded", () => {
+        // إخفاء شاشة التحميل
+        const splash = document.querySelector('.splash-screen');
+        setTimeout(() => {
+            splash.style.opacity = 0;
+            splash.style.display = 'none';
+        }, 1500);
+
+        // التنقل
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.getAttribute('data-section');
+                document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+                document.getElementById(target).classList.add('active');
+
+                navItems.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        initGamesSection();
+        initTutoringSection();
+        initPostModal();
+    });
+</script>
+<style>
+    .nav-item.active i,
+    .nav-item.active span {
+        color: var(--primary);
+        font-weight: bold;
+    }
+</style>
+
+e

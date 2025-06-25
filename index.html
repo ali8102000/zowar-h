@@ -326,6 +326,31 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+
+        /* الدردشة */
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .received {
+            background-color: #f1f1f1;
+            align-self: flex-start;
+        }
+
+        .sent {
+            background-color: var(--primary);
+            color: white;
+            align-self: flex-end;
+        }
     </style>
 </head>
 <body class="dark-mode">
@@ -361,7 +386,6 @@
         <main class="relative">
             <!-- قسم الرئيسية -->
             <section id="home-section" class="section active">
-                <!-- محتوى الرئيسية -->
                 <div class="p-4">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold">أحدث المنشورات</h2>
@@ -382,7 +406,7 @@
                 
                 <div class="mb-6">
                     <div class="relative">
-                        <input type="text" placeholder="ابحث عن أشخاص أو اهتمامات..." class="w-full bg-gray-100 dark:bg-gray-700 rounded-full py-3 px-5 pl-12 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
+                        <input type="text" id="search-input" placeholder="ابحث عن أشخاص أو اهتمامات..." class="w-full bg-gray-100 dark:bg-gray-700 rounded-full py-3 px-5 pl-12 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
                         <i class="fas fa-search absolute right-4 top-3.5 text-gray-400"></i>
                     </div>
                 </div>
@@ -391,6 +415,13 @@
                     <h3 class="text-lg font-semibold mb-3">الأكثر متابعة</h3>
                     <div id="popular-users" class="grid grid-cols-2 gap-3">
                         <!-- سيتم إضافة المستخدمين ديناميكياً -->
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-3">المجموعات</h3>
+                    <div id="groups-list" class="grid grid-cols-2 gap-3">
+                        <!-- سيتم إضافة المجموعات ديناميكياً -->
                     </div>
                 </div>
             </section>
@@ -537,15 +568,59 @@
                 </div>
                 
                 <div class="space-y-4">
-                    <button class="btn btn-primary w-full">
+                    <button id="edit-profile-btn" class="btn btn-primary w-full">
                         <i class="fas fa-user-edit mr-2"></i> تعديل الملف الشخصي
                     </button>
-                    <button class="btn bg-gray-100 dark:bg-gray-700 w-full">
+                    <button id="settings-btn" class="btn bg-gray-100 dark:bg-gray-700 w-full">
                         <i class="fas fa-cog mr-2"></i> الإعدادات
                     </button>
-                    <button class="btn bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 w-full">
+                    <button id="logout-btn" class="btn bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 w-full">
                         <i class="fas fa-sign-out-alt mr-2"></i> تسجيل الخروج
                     </button>
+                </div>
+            </section>
+
+            <!-- قسم الدردشة -->
+            <section id="chat-section" class="section p-4" style="display: none;">
+                <div class="flex items-center justify-between mb-4">
+                    <button id="back-to-contacts" class="text-xl">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 class="text-xl font-bold">المحادثات</h2>
+                    <div class="w-6"></div>
+                </div>
+                
+                <div id="contacts-list" class="space-y-2">
+                    <!-- قائمة الاتصالات -->
+                </div>
+                
+                <div id="chat-window" style="display: none;">
+                    <div class="flex items-center justify-between mb-4 border-b dark:border-gray-700 pb-2">
+                        <div class="flex items-center">
+                            <button id="back-to-contacts-list" class="mr-2">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <img id="chat-user-avatar" src="" class="w-10 h-10 rounded-full mr-2">
+                            <div>
+                                <h3 id="chat-user-name" class="font-bold"></h3>
+                                <p id="chat-user-status" class="text-xs text-gray-500">متصل الآن</p>
+                            </div>
+                        </div>
+                        <button id="chat-menu-btn" class="text-gray-500">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="chat-messages" class="chat-container mb-4 space-y-2 flex flex-col">
+                        <!-- الرسائل -->
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="message-input" placeholder="اكتب رسالة..." class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full py-2 px-4 focus:outline-none">
+                        <button id="send-message-btn" class="btn btn-primary w-10 h-10 rounded-full flex items-center justify-center">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
                 </div>
             </section>
         </main>
@@ -631,40 +706,6 @@
             
             <div id="game-content" class="p-4">
                 <!-- محتوى اللعبة الديناميكي -->
-                <div id="ludo-game" class="text-center">
-                    <div class="mb-4">
-                        <div id="ludo-dice" class="dice mx-auto my-4">
-                            <div class="face front">1</div>
-                            <div class="face back">2</div>
-                            <div class="face right">3</div>
-                            <div class="face left">4</div>
-                            <div class="face top">5</div>
-                            <div class="face bottom">6</div>
-                        </div>
-                        <button id="roll-dice-btn" class="btn btn-primary px-6 py-3 rounded-full text-lg font-bold">
-                            <i class="fas fa-dice mr-2"></i> ارمي النرد
-                        </button>
-                    </div>
-                    
-                    <div class="grid grid-cols-4 gap-2 mb-4">
-                        <div class="player bg-red-500 rounded-lg p-2 text-white">
-                            <p>أنت</p>
-                            <p class="text-xs">4 قطع</p>
-                        </div>
-                        <div class="player bg-blue-500 rounded-lg p-2 text-white">
-                            <p>محمد</p>
-                            <p class="text-xs">3 قطع</p>
-                        </div>
-                        <div class="player bg-green-500 rounded-lg p-2 text-white">
-                            <p>سارة</p>
-                            <p class="text-xs">4 قطع</p>
-                        </div>
-                        <div class="player bg-yellow-500 rounded-lg p-2 text-white">
-                            <p>نورا</p>
-                            <p class="text-xs">2 قطع</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -685,6 +726,102 @@
         </div>
     </div>
 
+    <!-- نافذة تعديل الملف الشخصي -->
+    <div id="edit-profile-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md overflow-hidden modal">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <button id="close-edit-profile-modal" class="text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="font-bold">تعديل الملف الشخصي</h3>
+                <button id="save-profile-btn" class="text-[var(--primary)] font-medium">حفظ</button>
+            </div>
+            
+            <div class="p-4 space-y-4">
+                <div class="flex flex-col items-center">
+                    <div class="relative mb-4">
+                        <img id="profile-avatar-preview" src="https://randomuser.me/api/portraits/men/32.jpg" class="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow">
+                        <label class="absolute bottom-0 right-0 bg-[var(--primary)] text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer">
+                            <i class="fas fa-camera"></i>
+                            <input type="file" id="profile-avatar-input" accept="image/*" class="hidden">
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">الاسم الكامل</label>
+                        <input type="text" id="profile-name" class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" value="أحمد محمد">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">اسم المستخدم</label>
+                        <input type="text" id="profile-username" class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" value="ahmed">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">البريد الإلكتروني</label>
+                        <input type="email" id="profile-email" class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" value="ahmed@example.com">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">نبذة عنك</label>
+                        <textarea id="profile-bio" class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" rows="3">مطور ويب ومهتم بالتكنولوجيا</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة الإعدادات -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md overflow-hidden modal">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <button id="close-settings-modal" class="text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="font-bold">الإعدادات</h3>
+                <div class="w-6"></div>
+            </div>
+            
+            <div class="p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span>الوضع الليلي</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="dark-mode-switch" class="sr-only peer" ${document.body.classList.contains('dark-mode') ? 'checked' : ''}>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--primary)] rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[var(--primary)]"></div>
+                    </label>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <span>إشعارات التطبيق</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--primary)] rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[var(--primary)]"></div>
+                    </label>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <span>أصوات التطبيق</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--primary)] rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[var(--primary)]"></div>
+                    </label>
+                </div>
+                
+                <div class="pt-4 border-t dark:border-gray-700">
+                    <h4 class="font-bold mb-2">حسابك</h4>
+                    <button id="change-password-btn" class="btn bg-gray-100 dark:bg-gray-700 w-full text-left py-2 px-3 rounded-lg mb-2">
+                        <i class="fas fa-lock mr-2"></i> تغيير كلمة المرور
+                    </button>
+                    <button id="delete-account-btn" class="btn bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 w-full text-left py-2 px-3 rounded-lg">
+                        <i class="fas fa-trash-alt mr-2"></i> حذف الحساب
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // بيانات التطبيق
         const appData = {
@@ -692,11 +829,13 @@
                 id: 1,
                 name: "أحمد محمد",
                 username: "ahmed",
+                email: "ahmed@example.com",
                 avatar: "https://randomuser.me/api/portraits/men/32.jpg",
                 bio: "مطور ويب ومهتم بالتكنولوجيا",
                 postsCount: 156,
                 followers: 1250,
-                following: 487
+                following: 487,
+                isOnline: true
             },
             posts: [
                 {
@@ -706,7 +845,8 @@
                     image: "https://source.unsplash.com/random/600x400?technology",
                     likes: 24,
                     comments: 5,
-                    time: "منذ ساعة"
+                    time: "منذ ساعة",
+                    liked: false
                 },
                 {
                     id: 2,
@@ -715,7 +855,8 @@
                     image: "https://source.unsplash.com/random/600x400?nature",
                     likes: 56,
                     comments: 12,
-                    time: "منذ 3 ساعات"
+                    time: "منذ 3 ساعات",
+                    liked: true
                 }
             ],
             popularUsers: [
@@ -724,28 +865,62 @@
                     name: "محمد علي",
                     username: "mohammed",
                     avatar: "https://randomuser.me/api/portraits/men/22.jpg",
-                    followers: 3200
+                    followers: 3200,
+                    isFollowing: false,
+                    isOnline: true
                 },
                 {
                     id: 3,
                     name: "سارة أحمد",
                     username: "sara",
                     avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-                    followers: 2800
+                    followers: 2800,
+                    isFollowing: true,
+                    isOnline: false
                 },
                 {
                     id: 4,
                     name: "نورا خالد",
                     username: "nora",
                     avatar: "https://randomuser.me/api/portraits/women/33.jpg",
-                    followers: 2100
+                    followers: 2100,
+                    isFollowing: false,
+                    isOnline: true
                 },
                 {
                     id: 5,
                     name: "خالد سعيد",
                     username: "khaled",
                     avatar: "https://randomuser.me/api/portraits/men/55.jpg",
-                    followers: 1800
+                    followers: 1800,
+                    isFollowing: true,
+                    isOnline: false
+                }
+            ],
+            groups: [
+                {
+                    id: 1,
+                    name: "مجموعة الرياضيات",
+                    members: 125,
+                    image: "https://source.unsplash.com/random/200x200?math"
+                },
+                {
+                    id: 2,
+                    name: "مجموعة المبرمجين",
+                    members: 342,
+                    image: "https://source.unsplash.com/random/200x200?code"
+                },
+                {
+                    id: 3,
+                    name: "مجموعة العلوم",
+                    members: 89,
+                    image: "https://source.unsplash.com/random/200x200?science"
+                },
+                {
+                    id: 4,
+                    name: "مجموعة الأدب العربي",
+                    members: 156,
+                    image: "https://source.unsplash.com/random/200x200?arabic"
                 }
             ],
             leaderboard: [
@@ -770,25 +945,45 @@
                     title: "الرياضيات",
                     description: "دروس متكاملة في الرياضيات لجميع المستويات",
                     lessons: 12,
-                    icon: "fas fa-square-root-alt"
+                    icon: "fas fa-square-root-alt",
+                    lessonsList: [
+                        { id: 1, title: "مقدمة في الجبر", duration: "15 دقيقة" },
+                        { id: 2, title: "حل المعادلات الخطية", duration: "20 دقيقة" },
+                        { id: 3, title: "الهندسة الأساسية", duration: "25 دقيقة" }
+                    ]
                 },
                 science: {
                     title: "العلوم",
                     description: "تجارب ونظريات علمية ممتعة",
                     lessons: 8,
-                    icon: "fas fa-flask"
+                    icon: "fas fa-flask",
+                    lessonsList: [
+                        { id: 1, title: "أساسيات الكيمياء", duration: "18 دقيقة" },
+                        { id: 2, title: "الخلايا والأنسجة", duration: "22 دقيقة" },
+                        { id: 3, title: "قوانين نيوتن", duration: "15 دقيقة" }
+                    ]
                 },
                 arabic: {
                     title: "اللغة العربية",
                     description: "قواعد اللغة والأدب العربي",
                     lessons: 15,
-                    icon: "fas fa-language"
+                    icon: "fas fa-language",
+                    lessonsList: [
+                        { id: 1, title: "أساسيات النحو", duration: "20 دقيقة" },
+                        { id: 2, title: "فنون البلاغة", duration: "25 دقيقة" },
+                        { id: 3, title: "تحليل النصوص الأدبية", duration: "30 دقيقة" }
+                    ]
                 },
                 islamic: {
                     title: "الدراسات الإسلامية",
                     description: "القرآن الكريم والسنة النبوية",
                     lessons: 10,
-                    icon: "fas fa-mosque"
+                    icon: "fas fa-mosque",
+                    lessonsList: [
+                        { id: 1, title: "أحكام الطهارة", duration: "15 دقيقة" },
+                        { id: 2, title: "سيرة النبي محمد", duration: "40 دقيقة" },
+                        { id: 3, title: "أركان الإسلام", duration: "20 دقيقة" }
+                    ]
                 }
             },
             notifications: [
@@ -816,6 +1011,36 @@
                     time: "منذ ساعة",
                     read: true
                 }
+            ],
+            messages: [
+                {
+                    id: 1,
+                    senderId: 2,
+                    receiverId: 1,
+                    text: "مرحباً أحمد، كيف حالك؟",
+                    time: "10:30 ص"
+                },
+                {
+                    id: 2,
+                    senderId: 1,
+                    receiverId: 2,
+                    text: "أهلاً محمد، أنا بخير الحمد لله. وأنت؟",
+                    time: "10:32 ص"
+                },
+                {
+                    id: 3,
+                    senderId: 2,
+                    receiverId: 1,
+                    text: "أنا أيضاً بخير، شكراً لسؤالك. هل انتهيت من المشروع؟",
+                    time: "10:33 ص"
+                },
+                {
+                    id: 4,
+                    senderId: 3,
+                    receiverId: 1,
+                    text: "مرحباً أحمد، هل يمكنك مساعدتي في درس الرياضيات؟",
+                    time: "أمس"
+                }
             ]
         };
 
@@ -824,7 +1049,8 @@
             click: new Tone.Player("https://assets.codepen.io/605876/click.mp3").toDestination(),
             notification: new Tone.Player("https://assets.codepen.io/605876/notification.mp3").toDestination(),
             diceRoll: new Tone.Player("https://assets.codepen.io/605876/dice-roll.mp3").toDestination(),
-            success: new Tone.Player("https://assets.codepen.io/605876/success.mp3").toDestination()
+            success: new Tone.Player("https://assets.codepen.io/605876/success.mp3").toDestination(),
+            message: new Tone.Player("https://assets.codepen.io/605876/message.mp3").toDestination()
         };
 
         // تهيئة التطبيق
@@ -847,6 +1073,7 @@
             // تحميل البيانات
             loadPosts();
             loadPopularUsers();
+            loadGroups();
             loadLeaderboard();
             loadNotifications();
             
@@ -891,6 +1118,18 @@
             
             // تهيئة نافذة الإشعارات
             initNotifications();
+            
+            // تهيئة نافذة تعديل الملف الشخصي
+            initEditProfile();
+            
+            // تهيئة نافذة الإعدادات
+            initSettings();
+            
+            // تهيئة قسم الدردشة
+            initChatSection();
+            
+            // البحث
+            initSearch();
             
             // إضافة تأثير النقر لجميع الأزرار
             document.querySelectorAll('button').forEach(btn => {
@@ -939,10 +1178,10 @@
                     <div class="relative mb-3">
                         <img src="${post.image}" class="w-full rounded-lg">
                         <div class="absolute bottom-3 right-3 flex space-x-2">
-                            <button class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center">
-                                <i class="fas fa-heart text-[var(--danger)]"></i>
+                            <button class="like-btn bg-white/80 dark:bg-gray-800/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center" data-post-id="${post.id}">
+                                <i class="fas fa-heart ${post.liked ? 'text-[var(--danger)]' : 'text-gray-500'}"></i>
                             </button>
-                            <button class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center">
+                            <button class="comment-btn bg-white/80 dark:bg-gray-800/80 backdrop-blur-md w-8 h-8 rounded-full flex items-center justify-center">
                                 <i class="fas fa-comment text-[var(--primary)]"></i>
                             </button>
                         </div>
@@ -953,17 +1192,45 @@
                         <div class="flex items-center space-x-2">
                             <div class="flex items-center">
                                 <i class="fas fa-heart text-[var(--danger)] mr-1"></i>
-                                <span>${post.likes}</span>
+                                <span class="like-count">${post.likes}</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-comment text-[var(--primary)] mr-1"></i>
                                 <span>${post.comments}</span>
                             </div>
                         </div>
+                        <button class="share-btn">
+                            <i class="fas fa-share"></i>
+                        </button>
                     </div>
                 `;
                 
                 postsContainer.appendChild(postElement);
+            });
+
+            // إضافة تفاعل الإعجاب
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const postId = parseInt(this.getAttribute('data-post-id'));
+                    const post = appData.posts.find(p => p.id === postId);
+                    const heartIcon = this.querySelector('i');
+                    
+                    if (post.liked) {
+                        post.likes--;
+                        post.liked = false;
+                        heartIcon.classList.remove('text-[var(--danger)]');
+                        heartIcon.classList.add('text-gray-500');
+                    } else {
+                        post.likes++;
+                        post.liked = true;
+                        heartIcon.classList.remove('text-gray-500');
+                        heartIcon.classList.add('text-[var(--danger)]');
+                    }
+                    
+                    // تحديث العداد
+                    const likeCount = this.closest('.bg-white').querySelector('.like-count');
+                    likeCount.textContent = post.likes;
+                });
             });
         }
         
@@ -975,14 +1242,64 @@
                 const userElement = document.createElement('div');
                 userElement.className = 'bg-white dark:bg-gray-800 rounded-xl shadow p-3 text-center slide-up';
                 userElement.innerHTML = `
-                    <img src="${user.avatar}" class="w-16 h-16 rounded-full mx-auto mb-2">
+                    <div class="relative mx-auto w-16 h-16 mb-2">
+                        <img src="${user.avatar}" class="w-full h-full rounded-full">
+                        ${user.isOnline ? '<span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>' : ''}
+                    </div>
                     <h3 class="font-bold">${user.name}</h3>
                     <p class="text-xs text-gray-500">@${user.username}</p>
                     <p class="text-xs mt-1"><i class="fas fa-users mr-1"></i> ${user.followers.toLocaleString()}</p>
-                    <button class="btn btn-primary text-xs px-3 py-1 mt-2">متابعة</button>
+                    <button class="follow-btn btn ${user.isFollowing ? 'bg-gray-100 dark:bg-gray-700' : 'btn-primary'} text-xs px-3 py-1 mt-2" data-user-id="${user.id}">
+                        ${user.isFollowing ? 'متابع' : 'متابعة'}
+                    </button>
                 `;
                 
                 popularUsersContainer.appendChild(userElement);
+            });
+
+            // إضافة تفاعل المتابعة
+            document.querySelectorAll('.follow-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = parseInt(this.getAttribute('data-user-id'));
+                    const user = appData.popularUsers.find(u => u.id === userId);
+                    
+                    user.isFollowing = !user.isFollowing;
+                    
+                    if (user.isFollowing) {
+                        this.classList.remove('btn-primary');
+                        this.classList.add('bg-gray-100', 'dark:bg-gray-700');
+                        this.textContent = 'متابع';
+                        appData.currentUser.following++;
+                    } else {
+                        this.classList.add('btn-primary');
+                        this.classList.remove('bg-gray-100', 'dark:bg-gray-700');
+                        this.textContent = 'متابعة';
+                        appData.currentUser.following--;
+                    }
+                    
+                    // تحديث العداد في الملف الشخصي
+                    updateProfileCounters();
+                });
+            });
+        }
+        
+        function loadGroups() {
+            const groupsContainer = document.getElementById('groups-list');
+            groupsContainer.innerHTML = '';
+            
+            appData.groups.forEach(group => {
+                const groupElement = document.createElement('div');
+                groupElement.className = 'bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden slide-up';
+                groupElement.innerHTML = `
+                    <img src="${group.image}" class="w-full h-24 object-cover">
+                    <div class="p-3">
+                        <h3 class="font-bold">${group.name}</h3>
+                        <p class="text-xs text-gray-500"><i class="fas fa-users mr-1"></i> ${group.members} عضو</p>
+                        <button class="btn btn-primary text-xs w-full mt-2">انضم الآن</button>
+                    </div>
+                `;
+                
+                groupsContainer.appendChild(groupElement);
             });
         }
         
@@ -1034,6 +1351,20 @@
                 `;
                 
                 notificationsList.appendChild(notificationElement);
+            });
+        }
+        
+        function updateProfileCounters() {
+            document.querySelectorAll('[data-counter="posts"]').forEach(el => {
+                el.textContent = appData.currentUser.postsCount;
+            });
+            
+            document.querySelectorAll('[data-counter="followers"]').forEach(el => {
+                el.textContent = appData.currentUser.followers;
+            });
+            
+            document.querySelectorAll('[data-counter="following"]').forEach(el => {
+                el.textContent = appData.currentUser.following;
             });
         }
         
@@ -1234,9 +1565,12 @@
                         <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
                             <h4 class="font-bold mb-2">الدروس المتاحة (${data.lessons})</h4>
                             <div class="space-y-2">
-                                ${Array.from({length: data.lessons}, (_, i) => `
+                                ${data.lessonsList.map(lesson => `
                                 <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded">
-                                    <span>الدرس ${i + 1}: مقدمة في ${data.title}</span>
+                                    <div>
+                                        <span>${lesson.title}</span>
+                                        <span class="text-xs text-gray-500 block">${lesson.duration}</span>
+                                    </div>
                                     <button class="btn btn-primary text-xs px-2 py-1">ابدأ</button>
                                 </div>
                                 `).join('')}
@@ -1292,10 +1626,12 @@
                     image: postImageInput.files[0] ? URL.createObjectURL(postImageInput.files[0]) : null,
                     likes: 0,
                     comments: 0,
-                    time: "الآن"
+                    time: "الآن",
+                    liked: false
                 };
 
                 appData.posts.unshift(newPost);
+                appData.currentUser.postsCount++;
                 loadPosts();
                 modal.classList.add('hidden');
                 
@@ -1337,6 +1673,319 @@
             closeNotificationsBtn.addEventListener('click', () => {
                 notificationsModal.classList.add('hidden');
             });
+        }
+        
+        function initEditProfile() {
+            const editProfileBtn = document.getElementById('edit-profile-btn');
+            const editProfileModal = document.getElementById('edit-profile-modal');
+            const closeEditProfileBtn = document.getElementById('close-edit-profile-modal');
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            const profileAvatarInput = document.getElementById('profile-avatar-input');
+            const profileAvatarPreview = document.getElementById('profile-avatar-preview');
+            const profileName = document.getElementById('profile-name');
+            const profileUsername = document.getElementById('profile-username');
+            const profileEmail = document.getElementById('profile-email');
+            const profileBio = document.getElementById('profile-bio');
+
+            editProfileBtn.addEventListener('click', () => {
+                // تعبئة البيانات الحالية
+                profileName.value = appData.currentUser.name;
+                profileUsername.value = appData.currentUser.username;
+                profileEmail.value = appData.currentUser.email;
+                profileBio.value = appData.currentUser.bio;
+                profileAvatarPreview.src = appData.currentUser.avatar;
+                
+                editProfileModal.classList.remove('hidden');
+            });
+
+            closeEditProfileBtn.addEventListener('click', () => {
+                editProfileModal.classList.add('hidden');
+            });
+
+            saveProfileBtn.addEventListener('click', () => {
+                // حفظ التغييرات
+                appData.currentUser.name = profileName.value;
+                appData.currentUser.username = profileUsername.value;
+                appData.currentUser.email = profileEmail.value;
+                appData.currentUser.bio = profileBio.value;
+                
+                if (profileAvatarInput.files[0]) {
+                    appData.currentUser.avatar = URL.createObjectURL(profileAvatarInput.files[0]);
+                }
+                
+                // تحديث الواجهة
+                document.querySelectorAll('.profile-name').forEach(el => {
+                    el.textContent = appData.currentUser.name;
+                });
+                
+                document.querySelectorAll('.profile-username').forEach(el => {
+                    el.textContent = `@${appData.currentUser.username}`;
+                });
+                
+                document.querySelectorAll('.profile-bio').forEach(el => {
+                    el.textContent = appData.currentUser.bio;
+                });
+                
+                document.querySelectorAll('.profile-avatar').forEach(el => {
+                    el.src = appData.currentUser.avatar;
+                });
+                
+                editProfileModal.classList.add('hidden');
+                alert('تم حفظ التغييرات بنجاح!');
+            });
+
+            profileAvatarInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        profileAvatarPreview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+        
+        function initSettings() {
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeSettingsBtn = document.getElementById('close-settings-modal');
+            const darkModeSwitch = document.getElementById('dark-mode-switch');
+            const changePasswordBtn = document.getElementById('change-password-btn');
+            const deleteAccountBtn = document.getElementById('delete-account-btn');
+
+            settingsBtn.addEventListener('click', () => {
+                settingsModal.classList.remove('hidden');
+            });
+
+            closeSettingsBtn.addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+            });
+
+            darkModeSwitch.addEventListener('change', function() {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('darkMode', this.checked);
+            });
+
+            changePasswordBtn.addEventListener('click', () => {
+                alert('سيتم فتح نموذج تغيير كلمة المرور');
+            });
+
+            deleteAccountBtn.addEventListener('click', () => {
+                if (confirm('هل أنت متأكد من رغبتك في حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                    alert('تم حذف الحساب بنجاح');
+                    // هنا يمكنك إضافة إعادة توجيه إلى صفحة تسجيل الخروج
+                }
+            });
+        }
+        
+        function initChatSection() {
+            const chatSection = document.getElementById('chat-section');
+            const contactsList = document.getElementById('contacts-list');
+            const chatWindow = document.getElementById('chat-window');
+            const backToContacts = document.getElementById('back-to-contacts');
+            const backToContactsList = document.getElementById('back-to-contacts-list');
+            const sendMessageBtn = document.getElementById('send-message-btn');
+            const messageInput = document.getElementById('message-input');
+            const chatMessages = document.getElementById('chat-messages');
+
+            // عرض قائمة الاتصالات
+            function loadContacts() {
+                contactsList.innerHTML = '';
+                
+                appData.popularUsers.forEach(user => {
+                    const contactElement = document.createElement('div');
+                    contactElement.className = 'flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg mb-2 cursor-pointer contact-item';
+                    contactElement.setAttribute('data-user-id', user.id);
+                    contactElement.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="relative">
+                                <img src="${user.avatar}" class="w-12 h-12 rounded-full mr-3">
+                                ${user.isOnline ? '<span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>' : ''}
+                            </div>
+                            <div>
+                                <h3 class="font-bold">${user.name}</h3>
+                                <p class="text-xs text-gray-500">${user.isOnline ? 'متصل الآن' : 'غير متصل'}</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-left text-gray-400"></i>
+                    `;
+                    
+                    contactsList.appendChild(contactElement);
+                });
+
+                // إضافة حدث النقر على جهة اتصال
+                document.querySelectorAll('.contact-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const userId = parseInt(this.getAttribute('data-user-id'));
+                        const user = appData.popularUsers.find(u => u.id === userId);
+                        
+                        // عرض نافذة الدردشة
+                        showChatWindow(user);
+                    });
+                });
+            }
+
+            // عرض نافذة الدردشة مع مستخدم معين
+            function showChatWindow(user) {
+                document.getElementById('chat-user-avatar').src = user.avatar;
+                document.getElementById('chat-user-name').textContent = user.name;
+                document.getElementById('chat-user-status').textContent = user.isOnline ? 'متصل الآن' : 'غير متصل';
+                
+                // تحميل الرسائل
+                loadMessages(user.id);
+                
+                // تبديل العرض
+                contactsList.style.display = 'none';
+                chatWindow.style.display = 'block';
+            }
+
+            // تحميل الرسائل بين المستخدم الحالي والمستخدم المحدد
+            function loadMessages(userId) {
+                chatMessages.innerHTML = '';
+                
+                const messages = appData.messages.filter(m => 
+                    (m.senderId === userId && m.receiverId === 1) || 
+                    (m.senderId === 1 && m.receiverId === userId)
+                );
+                
+                messages.forEach(message => {
+                    const isSent = message.senderId === 1;
+                    const user = isSent ? appData.currentUser : appData.popularUsers.find(u => u.id === userId);
+                    
+                    const messageElement = document.createElement('div');
+                    messageElement.className = `chat-message ${isSent ? 'sent' : 'received'} slide-up`;
+                    messageElement.innerHTML = `
+                        <p>${message.text}</p>
+                        <p class="text-xs opacity-70 mt-1 text-right">${message.time}</p>
+                    `;
+                    
+                    chatMessages.appendChild(messageElement);
+                });
+                
+                // التمرير إلى الأسفل
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // إرسال رسالة جديدة
+            function sendMessage(userId, text) {
+                if (text.trim() === '') return;
+                
+                const newMessage = {
+                    id: appData.messages.length + 1,
+                    senderId: 1,
+                    receiverId: userId,
+                    text: text,
+                    time: "الآن"
+                };
+                
+                appData.messages.push(newMessage);
+                loadMessages(userId);
+                messageInput.value = '';
+                sounds.message.start();
+            }
+
+            // الأحداث
+            backToContacts.addEventListener('click', () => {
+                showSection('home-section');
+            });
+
+            backToContactsList.addEventListener('click', () => {
+                chatWindow.style.display = 'none';
+                contactsList.style.display = 'block';
+            });
+
+            sendMessageBtn.addEventListener('click', () => {
+                const userId = parseInt(document.getElementById('chat-user-avatar').getAttribute('data-user-id'));
+                sendMessage(userId, messageInput.value);
+            });
+
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const userId = parseInt(document.getElementById('chat-user-avatar').getAttribute('data-user-id'));
+                    sendMessage(userId, messageInput.value);
+                }
+            });
+
+            // تحميل جهات الاتصال عند فتح قسم الدردشة
+            document.getElementById('chat-section').addEventListener('click', () => {
+                loadContacts();
+            });
+        }
+        
+        function initSearch() {
+            const searchInput = document.getElementById('search-input');
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                
+                if (query.length > 0) {
+                    // البحث في المستخدمين
+                    const filteredUsers = appData.popularUsers.filter(user => 
+                        user.name.toLowerCase().includes(query) || 
+                        user.username.toLowerCase().includes(query)
+                    );
+                    
+                    // البحث في المجموعات
+                    const filteredGroups = appData.groups.filter(group => 
+                        group.name.toLowerCase().includes(query)
+                    );
+                    
+                    // عرض نتائج البحث
+                    showSearchResults(filteredUsers, filteredGroups);
+                } else {
+                    // إعادة عرض المحتوى العادي
+                    loadPopularUsers();
+                    loadGroups();
+                }
+            });
+        }
+        
+        function showSearchResults(users, groups) {
+            const popularUsersContainer = document.getElementById('popular-users');
+            const groupsContainer = document.getElementById('groups-list');
+            
+            // عرض نتائج المستخدمين
+            popularUsersContainer.innerHTML = '';
+            if (users.length > 0) {
+                users.forEach(user => {
+                    const userElement = document.createElement('div');
+                    userElement.className = 'bg-white dark:bg-gray-800 rounded-xl shadow p-3 text-center slide-up';
+                    userElement.innerHTML = `
+                        <img src="${user.avatar}" class="w-16 h-16 rounded-full mx-auto mb-2">
+                        <h3 class="font-bold">${user.name}</h3>
+                        <p class="text-xs text-gray-500">@${user.username}</p>
+                        <p class="text-xs mt-1"><i class="fas fa-users mr-1"></i> ${user.followers.toLocaleString()}</p>
+                        <button class="follow-btn btn ${user.isFollowing ? 'bg-gray-100 dark:bg-gray-700' : 'btn-primary'} text-xs px-3 py-1 mt-2" data-user-id="${user.id}">
+                            ${user.isFollowing ? 'متابع' : 'متابعة'}
+                        </button>
+                    `;
+                    
+                    popularUsersContainer.appendChild(userElement);
+                });
+            } else {
+                popularUsersContainer.innerHTML = '<p class="text-center py-4">لا توجد نتائج مطابقة</p>';
+            }
+            
+            // عرض نتائج المجموعات
+            groupsContainer.innerHTML = '';
+            if (groups.length > 0) {
+                groups.forEach(group => {
+                    const groupElement = document.createElement('div');
+                    groupElement.className = 'bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden slide-up';
+                    groupElement.innerHTML = `
+                        <img src="${group.image}" class="w-full h-24 object-cover">
+                        <div class="p-3">
+                            <h3 class="font-bold">${group.name}</h3>
+                            <p class="text-xs text-gray-500"><i class="fas fa-users mr-1"></i> ${group.members} عضو</p>
+                            <button class="btn btn-primary text-xs w-full mt-2">انضم الآن</button>
+                        </div>
+                    `;
+                    
+                    groupsContainer.appendChild(groupElement);
+                });
+            } else {
+                groupsContainer.innerHTML = '<p class="text-center py-4">لا توجد نتائج مطابقة</p>';
+            }
         }
         
         function createRippleEffect(event) {
